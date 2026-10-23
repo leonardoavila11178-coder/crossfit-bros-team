@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#000000">
+  <title>Mi racha · CrossFit Bros Team</title>
+  <link rel="icon" href="logo.jpg">
+  <style>
+    :root {
+      --fondo: #000000;
+      --superficie: #111111;
+      --texto: #ffffff;
+      --tenue: #a3a3a3;
+      --borde: #2b2b2b;
+      --verde: #00ff00;
+      --verde-oscuro: #0b3d0b;
+      --ambar: #ffc233;
+      --rojo: #ff5c5c;
+      color-scheme: dark;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--fondo); color: var(--texto); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    main { max-width: 480px; margin: 0 auto; padding: 20px 16px 40px; display: grid; gap: 16px; }
+    header { display: flex; align-items: center; gap: 12px; }
+    header img { width: 56px; border-radius: 6px; }
+    header h1 { margin: 0; font-family: Impact, "Arial Black", sans-serif; font-weight: 400; color: var(--verde); font-size: 1.5rem; letter-spacing: .03em; text-transform: uppercase; }
+    header p { margin: 0; color: var(--tenue); }
+    .tarjeta { background: var(--superficie); border: 1px solid var(--borde); border-radius: 16px; padding: 16px; }
+    .racha { text-align: center; padding: 24px 16px; }
+    .llama { font-size: 4.5rem; line-height: 1; display: inline-block; }
+    .llama.apagada { filter: grayscale(1); opacity: .4; }
+    .numero { font-family: Impact, "Arial Black", sans-serif; font-size: 4.5rem; line-height: 1; color: var(--verde); margin-top: 6px; }
+    .racha.riesgo .numero { color: var(--ambar); }
+    .etiqueta { color: var(--tenue); text-transform: uppercase; letter-spacing: .08em; font-size: .8rem; font-weight: 700; }
+    .estado { margin: 12px 0 0; font-weight: 600; }
+    .racha.riesgo .estado { color: var(--ambar); }
+    .datos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .datos div { background: var(--superficie); border: 1px solid var(--borde); border-radius: 12px; padding: 10px; text-align: center; color: var(--tenue); font-size: .8rem; }
+    .datos b { display: block; color: var(--texto); font-size: 1.4rem; }
+    h2 { margin: 0 0 10px; font-size: 1rem; text-transform: uppercase; letter-spacing: .06em; }
+    .barra { height: 14px; background: var(--borde); border-radius: 999px; overflow: hidden; margin: 8px 0 6px; }
+    .barra span { display: block; height: 100%; background: var(--verde); border-radius: 999px; }
+    .premios { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+    .premios li { display: flex; gap: 12px; align-items: center; }
+    .premios .icono { font-size: 1.8rem; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 12px; background: var(--fondo); border: 1px solid var(--borde); flex: none; }
+    .premios li.bloqueado .icono { filter: grayscale(1); opacity: .45; }
+    .premios li.ganado .icono { border-color: var(--verde); }
+    .premios small { color: var(--tenue); display: block; }
+    .aviso-premio { background: var(--verde); color: #000; border-radius: 16px; padding: 14px 16px; font-weight: 700; margin-bottom: 16px; }
+    .calendario { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+    .calendario span { aspect-ratio: 1; border-radius: 8px; background: var(--borde); display: grid; place-items: center; font-size: .75rem; color: var(--tenue); }
+    .calendario span.vino { background: var(--verde); color: #000; font-weight: 700; }
+    .calendario span.cerrado { background: transparent; border: 1px dashed var(--borde); }
+    .calendario span.hoy { outline: 2px solid var(--texto); }
+    .calendario span.futuro { visibility: hidden; }
+    .dias-semana { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; color: var(--tenue); font-size: .7rem; margin-bottom: 6px; }
+    .reglas { color: var(--tenue); font-size: .85rem; line-height: 1.5; }
+    .error { text-align: center; color: var(--tenue); padding: 40px 16px; }
+    .mi-lugar, .nivel { display: flex; gap: 14px; align-items: center; }
+    .lugar-grande, .nivel-emoji { font-family: Impact, "Arial Black", sans-serif; font-size: 3rem; line-height: 1; color: var(--verde); min-width: 64px; text-align: center; }
+    .nivel-emoji { font-family: inherit; }
+    .mi-lugar small, .nivel small { display: block; color: var(--tenue); margin-top: 2px; }
+    .vecinos { color: var(--tenue); font-size: .9rem; margin: 12px 0; display: grid; gap: 4px; }
+    .ranking { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+    .ranking li { display: flex; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 10px; background: var(--fondo); border: 1px solid var(--borde); }
+    .ranking li.yo { border-color: var(--verde); background: var(--verde-oscuro); }
+    .ranking .pos { width: 30px; text-align: center; font-weight: 700; }
+    .ranking .quien { flex: 1; }
+    .ranking b { font-variant-numeric: tabular-nums; }
+    .en-juego { margin: 12px 0 0; color: var(--tenue); font-size: .9rem; }
+    .trofeos { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
+    .trofeos span { background: var(--verde-oscuro); border: 1px solid var(--verde); border-radius: 999px; padding: 4px 10px; font-size: .85rem; }
+    .como ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+    @media (prefers-reduced-motion: no-preference) {
+      .llama.viva { animation: latido 1.6s ease-in-out infinite; }
+      @keyframes latido { 50% { transform: scale(1.08); } }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <img src="logo.jpg" alt="Logo de CrossFit Bros Team">
+      <div>
+        <h1>CrossFit Bros Team</h1>
+        <p id="saludo">Cargando tu racha…</p>
+      </div>
+    </header>
+    <div id="contenido" hidden>
+      <div id="aviso-premio" class="aviso-premio" hidden></div>
+
+      <section class="tarjeta racha" id="tarjeta-racha">
+        <div class="llama" id="llama">🔥</div>
+        <div class="numero" id="numero-racha">0</div>
+        <div class="etiqueta" id="texto-dias">días de racha</div>
+        <p class="estado" id="estado-racha"></p>
+      </section>
+
+      <section class="datos" style="margin-top:16px">
+        <div><b id="puntos">0</b>puntos</div>
+        <div><b id="mejor">0</b>mejor racha</div>
+        <div><b id="clases">0</b>clases</div>
+      </section>
+
+      <section class="tarjeta" style="margin-top:16px">
+        <h2>🏆 Ranking de <span id="ranking-mes"></span></h2>
+        <div class="mi-lugar">
+          <div class="lugar-grande" id="mi-lugar">—</div>
+          <div><b id="mi-lugar-texto"></b><small id="puntos-mes"></small></div>
+        </div>
+        <div class="vecinos" id="vecinos"></div>
+        <ol class="ranking" id="top"></ol>
+        <p class="en-juego" id="en-juego"></p>
+        <div class="trofeos" id="trofeos" hidden></div>
+      </section>
+
+      <section class="tarjeta" style="margin-top:16px">
+        <h2>Tu nivel</h2>
+        <div class="nivel">
+          <div class="nivel-emoji" id="nivel-emoji"></div>
+          <div><b id="nivel-nombre"></b><small id="nivel-siguiente"></small></div>
+        </div>
+        <div class="barra" id="barra-nivel"><span id="progreso-nivel"></span></div>
+      </section>
+
+      <section class="tarjeta" style="margin-top:16px">
+        <h2>🎁 Premios GRATIS</h2>
+        <p id="siguiente" class="reglas"></p>
+        <div class="barra" id="barra" hidden><span id="progreso"></span></div>
+        <ul class="premios" id="premios"></ul>
+      </section>
+
+      <section class="tarjeta" style="margin-top:16px">
+        <h2>Tus últimas 5 semanas</h2>
+        <div class="dias-semana"><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span></div>
+        <div class="calendario" id="calendario"></div>
+      </section>
+
+      <section class="tarjeta reglas como" style="margin-top:16px">
+        <h2>Cómo ganar puntos</h2>
+        <ul id="como-funciona"></ul>
+        <p id="proximo-pago"></p>
+      </section>
+    </div>
+    <p id="error" class="error" hidden></p>
+  </main>
+
+  <script src="config.js"></script>
+  <script>
+    function pedirDatos() {
+      const token = new URLSearchParams(location.search).get('socio');
+      if (!token) return Promise.reject(new Error('Abre el enlace personal que te mandó CrossFit Bros Team.'));
+      return fetch(window.CBT_API, { method: 'POST', body: JSON.stringify({ accion: 'socio', token }) })
+        .then((respuesta) => respuesta.json())
+        .then((r) => (r.error ? Promise.reject(new Error(r.error)) : r.datos))
+        .catch((error) => Promise.reject(new Error(/fetch|Load failed/i.test(error.message)
+          ? 'No se pudo cargar tu racha. Revisa tu internet e inténtalo de nuevo.' : error.message)));
+    }
+
+    const $ = (id) => document.getElementById(id);
+    const escapar = (texto) => String(texto ?? '').replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+    const fechaLarga = (f) => new Date(`${f}T12:00:00`).toLocaleDateString('es-MX', { day: 'numeric', month: 'long' });
+
+    function sumarDias(fecha, dias) {
+      const d = new Date(`${fecha}T12:00:00Z`);
+      d.setUTCDate(d.getUTCDate() + dias);
+      return d.toISOString().slice(0, 10);
+    }
+
+    function mostrar(v) {
+      $('saludo').textContent = `¡Hola, ${v.nombre}! 💪`;
+      $('numero-racha').textContent = v.racha;
+      $('texto-dias').textContent = v.racha === 1 ? 'día de racha' : 'días de racha';
+      $('llama').className = v.racha > 0 ? `llama${v.vinoHoy ? ' viva' : ''}` : 'llama apagada';
+      $('tarjeta-racha').classList.toggle('riesgo', v.estado === 'ultimoDia');
+      $('estado-racha').textContent = {
+        sinEmpezar: 'Tu racha empieza en tu próxima clase. ¡Te esperamos!',
+        perdida: v.finDeSemana ? 'Perdiste tu racha, pero el lunes puedes empezar una nueva. ¡Vamos! 🔥' : 'Perdiste tu racha, pero hoy puedes empezar una nueva. ¡Vamos! 🔥',
+        ultimoDia: '⚠️ Hoy es tu último día para no perder tu racha. ¡Ven al box!',
+        activa: v.vinoHoy ? '¡Ya sumaste hoy! Nos vemos en la próxima clase.'
+          : v.finDeSemana ? 'Hoy no hay clase: tu racha está a salvo. ¡Nos vemos el lunes! 💪' : '¡Vas muy bien! Ven hoy para seguir sumando.',
+      }[v.estado];
+      $('puntos').textContent = v.puntos.toLocaleString('es-MX');
+      $('mejor').textContent = v.mejorRacha;
+      $('clases').textContent = v.clases;
+
+      // Ranking del mes: mi lugar, quién va arriba y abajo, y el top 10.
+      const medalla = (lugar) => ['🥇', '🥈', '🥉'][lugar - 1] ?? `${lugar}º`;
+      const rk = v.ranking;
+      const misPuntos = v.puntosMes.total;
+      $('ranking-mes').textContent = rk.mes;
+      $('mi-lugar').textContent = misPuntos ? medalla(rk.posicion) : '—';
+      $('mi-lugar-texto').textContent = misPuntos ? `Vas en el lugar ${rk.posicion} de ${rk.participantes}` : 'Aún no sumas puntos este mes';
+      $('puntos-mes').textContent = `${misPuntos.toLocaleString('es-MX')} puntos este mes · cada mes todos empiezan en cero`;
+      const vecinos = [];
+      if (rk.arriba) vecinos.push(`⬆️ Arriba de ti: ${rk.arriba.nombre} con ${rk.arriba.puntos} pts. Te faltan ${rk.arriba.puntos - misPuntos + 1} para pasarle.`);
+      else if (misPuntos) vecinos.push('👑 ¡Vas en primer lugar! Que nadie te alcance.');
+      if (rk.abajo) vecinos.push(`⬇️ Detrás de ti: ${rk.abajo.nombre} con ${rk.abajo.puntos} pts.`);
+      $('vecinos').innerHTML = vecinos.map((t) => `<span>${escapar(t)}</span>`).join('');
+      $('top').innerHTML = rk.top.map((f) => `
+        <li class="${f.esTu ? 'yo' : ''}"><span class="pos">${f.puntos ? medalla(f.posicion) : '—'}</span>
+          <span class="quien">${f.nivel} ${escapar(f.nombre)}${f.esTu ? ' (tú)' : ''}</span><b>${f.puntos}</b></li>`).join('');
+
+      const pm = v.reglas.podioDelMes;
+      $('en-juego').textContent = `🏆 En juego al cerrar ${rk.mes}: 🥇 +${pm[0]} · 🥈 +${pm[1]} · 🥉 +${pm[2]} puntos.`;
+      $('trofeos').hidden = v.trofeos.length === 0;
+      $('trofeos').innerHTML = v.trofeos.map((t) => `<span>${medalla(t.lugar)} ${t.lugar === 1 ? 'Campeón' : `${t.lugar}º lugar`} de ${escapar(t.mes)}</span>`).join('');
+
+      // Nivel por los puntos de siempre.
+      $('nivel-emoji').textContent = v.nivel.emoji;
+      $('nivel-nombre').textContent = `${v.nivel.nombre} · ${v.puntos.toLocaleString('es-MX')} puntos`;
+      $('nivel-siguiente').textContent = v.nivel.siguiente
+        ? `Te faltan ${v.nivel.siguiente.faltan.toLocaleString('es-MX')} puntos para ${v.nivel.siguiente.emoji} ${v.nivel.siguiente.nombre}`
+        : `¡Llegaste al nivel máximo! Eres leyenda del box y te ganaste ${v.reglas.premioLeyenda.nombre} ${v.reglas.premioLeyenda.emoji}`;
+      const avanceNivel = v.nivel.siguiente ? (v.puntos - v.nivel.minimo) / (v.nivel.siguiente.minimo - v.nivel.minimo) : 1;
+      $('progreso-nivel').style.width = `${Math.round(Math.max(0, Math.min(1, avanceNivel)) * 100)}%`;
+
+      const r = v.reglas;
+      $('como-funciona').innerHTML = [
+        `🔥 Cada clase: +${r.puntosPorClase} puntos y +1 día de racha.`,
+        `Tu racha sigue mientras no faltes más de ${v.diasSinVenir} días seguidos (sábados y domingos no cuentan).`,
+        `📈 Cada 10 días de racha (10, 20, 30…): +${r.bonoDeRacha} puntos.`,
+        ...Object.values(r.bonos).map((b) => `${b.emoji} ${b.nombre}: +${b.puntos} (lo marca tu coach).`),
+        `🏋️ WOD, según tu nivel: peso alto +${r.pesos.alto.puntos}, medio +${r.pesos.medio.puntos}, bajo +${r.pesos.bajo.puntos} · resistencia alta +${r.resistencias.alta.puntos}, media +${r.resistencias.media.puntos} · WOD difícil +${r.dificultades.dificil.puntos}, dificultad media +${r.dificultades.media.puntos}.`,
+        `⏱️ Mejor tiempo, más rondas o más repeticiones del día: 🥇 +${r.puntosPorResultado[0]} 🥈 +${r.puntosPorResultado[1]} 🥉 +${r.puntosPorResultado[2]}.`,
+        `🏆 Podio del día (más puntos ese día): 🥇 +${r.podioDelDia[0]} 🥈 +${r.podioDelDia[1]} 🥉 +${r.podioDelDia[2]}.`,
+        `👑 Podio del mes: 🥇 +${r.podioDelMes[0]} 🥈 +${r.podioDelMes[1]} 🥉 +${r.podioDelMes[2]}. Llega a ${r.niveles[r.niveles.length - 1].emoji} ${r.niveles[r.niveles.length - 1].nombre} y gánate ${r.premioLeyenda.nombre}.`,
+        `🎁 Premios GRATIS por racha: ${v.catalogo.map((p) => `${p.racha} días = ${p.nombre} ${p.emoji}`).join(' · ')}.`,
+      ].map((t) => `<li>${escapar(t)}</li>`).join('');
+
+      const porRecoger = v.premios.filter((p) => !p.entregadoEn);
+      $('aviso-premio').hidden = porRecoger.length === 0;
+      $('aviso-premio').textContent = porRecoger.map((p) => `🎉 ¡GANASTE! Tu ${p.nombre} ${p.emoji} te espera en recepción. ¡Pídelo ya!`).join(' ');
+
+      if (v.siguientePremio) {
+        const anterior = [...v.catalogo].reverse().find((p) => p.racha < v.siguientePremio.racha)?.racha ?? 0;
+        const avance = Math.max(0, Math.min(1, (v.racha - anterior) / (v.siguientePremio.racha - anterior)));
+        $('siguiente').textContent = `¡Te faltan solo ${v.siguientePremio.faltan} días de racha para tu ${v.siguientePremio.nombre} ${v.siguientePremio.emoji}! Tú puedes 🔥`;
+        $('barra').hidden = false;
+        $('progreso').style.width = `${Math.round(avance * 100)}%`;
+      } else {
+        $('siguiente').textContent = '¡Ya llegaste a todos los premios! Eres leyenda del box. 🏆';
+      }
+      $('premios').innerHTML = v.catalogo.map((p) => {
+        const veces = v.premios.filter((g) => g.racha === p.racha).length;
+        const clase = veces ? 'ganado' : 'bloqueado';
+        const detalle = veces ? `Ganado ${veces === 1 ? '' : `${veces} veces`}`.trim() : `Llega a ${p.racha} días de racha y es tuyo`;
+        return `<li class="${clase}"><span class="icono">${p.emoji}</span><span><b>${p.nombre}</b><small>${detalle}</small></span></li>`;
+      }).join('');
+
+      // Calendario de las últimas 5 semanas, de lunes a domingo (fin de semana cerrado).
+      const diaSemana = (new Date(`${v.hoy}T12:00:00Z`).getUTCDay() + 6) % 7;
+      const inicio = sumarDias(v.hoy, -diaSemana - 28);
+      const vino = new Set(v.asistenciasRecientes);
+      const celdas = [];
+      for (let i = 0; i < 35; i++) {
+        const fecha = sumarDias(inicio, i);
+        const clases = [vino.has(fecha) ? 'vino' : '', i % 7 >= 5 ? 'cerrado' : '', fecha === v.hoy ? 'hoy' : '', fecha > v.hoy ? 'futuro' : ''];
+        celdas.push(`<span class="${clases.join(' ').trim()}" title="${fecha}">${Number(fecha.slice(8))}</span>`);
+      }
+      $('calendario').innerHTML = celdas.join('');
+      $('proximo-pago').textContent = v.proximoPago ? `Tu próximo pago de la mensualidad es el ${fechaLarga(v.proximoPago)}.` : '';
+      $('contenido').hidden = false;
+    }
+
+    pedirDatos().then(mostrar).catch((error) => {
+      $('saludo').textContent = '';
+      $('error').hidden = false;
+      $('error').textContent = error.message || 'No se pudo cargar tu racha. Intenta de nuevo.';
+    });
+  </script>
+</body>
+</html>

@@ -311,6 +311,12 @@ dialog.entrada label { width: 100%; text-align: left; }
 dialog.entrada .botones { justify-content: center; width: 100%; }
 dialog.entrada .botones button { width: 100%; }
 #info-contrasena { margin-bottom: 12px; }
+
+/* Toques en el celular: sin esperar el doble toque de zoom, y el panel no se usa hasta que carga. */
+button, a, label, input, select, summary { touch-action: manipulation; }
+body.cargando-panel main button, body.cargando-panel .encabezado button { pointer-events: none; opacity: .55; }
+body.cargando-panel .encabezado::after { content: "Cargando…"; display: block; color: var(--tenue); font-size: .85rem; margin-top: 6px; }
+button.llego[aria-busy="true"] { opacity: .7; }
 </style>
 </head>
 <body>
@@ -721,7 +727,12 @@ function guardarSesion(sesion) {
 }
 
 async function llamarConClave(cuerpo) {
-  const respuesta = await fetch(PANEL.urlApi, { method: 'POST', body: JSON.stringify(cuerpo) });
+  let respuesta;
+  try {
+    respuesta = await fetch(PANEL.urlApi, { method: 'POST', body: JSON.stringify(cuerpo) });
+  } catch {
+    throw new Error('sin conexión. Revisa tu internet e inténtalo de nuevo.');
+  }
   return respuesta.json();
 }
 
@@ -757,8 +768,7 @@ function pedirContrasena(mensaje = '') {
         esperandoEntrada = null;
         resolver();
       } catch (problema) {
-        error.textContent = problema.message === 'Failed to fetch' || problema.message === 'Load failed'
-          ? 'No hay conexión con el programa. Revisa tu internet e inténtalo de nuevo.' : problema.message;
+        error.textContent = problema.message.startsWith('sin conexión') ? `No hay ${problema.message}` : problema.message;
       } finally {
         boton.disabled = false;
       }
@@ -882,11 +892,15 @@ function pintarLista() {
           const activo = (s.bonos?.[fechaLista] ?? []).includes(clave);
           return `<button type="button" class="chip ${activo ? 'activo' : ''}" data-bono="${clave}" data-socio="${s.id}" aria-pressed="${activo}">${b.emoji} ${b.corto} +${b.puntos}</button>`;
         }).join('')}</div>` : ''}
-        ${cerrado ? '' : `<button class="llego ${vino ? 'hecho' : ''}" data-asistencia="${s.id}" data-vino="${vino}">${vino ? '✓ Vino' : 'Llegó'}</button>`}
+        ${cerrado ? '' : `<button class="llego ${vino ? 'hecho' : ''}" data-asistencia="${s.id}" data-vino="${vino}" ${guardandoAsistencia.has(s.id) ? 'aria-busy="true"' : ''}>${vino ? '✓ Vino' : 'Llegó'}</button>`}
       </li>`;
   }).join('');
   $('#sin-lista').hidden = visibles.length > 0;
 }
+
+// Pase de lista al instante: se marca en la pantalla en cuanto lo tocas y se guarda por detrás.
+// Si Google responde con error, se regresa como estaba y te avisa.
+const guardandoAsistencia = new Set();
 
 $('#lista-asistencia').addEventListener('click', (evento) => {
   const chip = evento.target.closest('button[data-bono]');
@@ -894,33 +908,36 @@ $('#lista-asistencia').addEventListener('click', (evento) => {
     const socio = socios.find((s) => s.id === chip.dataset.socio);
     const fechaLista = $('#lista-fecha').value || config.hoy;
     const activo = chip.getAttribute('aria-pressed') !== 'true';
-    conEspera(chip, async () => {
-      try {
-        const { bonos } = await api(`/socios/${socio.id}/bonos`, { method: 'POST', body: { fecha: fechaLista, bono: chip.dataset.bono, activo } });
-        actualizarSocioLocal(socio.id, { bonos: { ...(socio.bonos ?? {}), [fechaLista]: bonos } });
-      } catch (error) {
-        avisar(error.message);
-      }
-    });
+    const antes = socio.bonos ?? {};
+    const marcados = new Set(antes[fechaLista] ?? []);
+    if (activo) marcados.add(chip.dataset.bono); else marcados.delete(chip.dataset.bono);
+    actualizarSocioLocal(socio.id, { bonos: { ...antes, [fechaLista]: [...marcados] } });
+    api(`/socios/${socio.id}/bonos`, { method: 'POST', body: { fecha: fechaLista, bono: chip.dataset.bono, activo } })
+      .then((bonos) => actualizarSocioLocal(socio.id, { bonos: { ...(socios.find((s) => s.id === socio.id).bonos ?? {}), [fechaLista]: bonos.bonos } }))
+      .catch((error) => { actualizarSocioLocal(socio.id, { bonos: antes }); avisar(error.message); });
     return;
   }
   const boton = evento.target.closest('button[data-asistencia]');
-  if (!boton) return;
+  if (!boton || guardandoAsistencia.has(boton.dataset.asistencia)) return;
   const socio = socios.find((s) => s.id === boton.dataset.asistencia);
   const fechaLista = $('#lista-fecha').value || config.hoy;
+  const asistenciasAntes = socio.asistencias ?? [];
   if (boton.dataset.vino === 'true') {
     if (!confirm(`¿Quitar la asistencia de ${socio.nombre} del ${fechaLarga(fechaLista)}?`)) return;
-    conEspera(boton, async () => {
-      const { racha } = await api(`/socios/${socio.id}/asistencia/${fechaLista}`, { method: 'DELETE' });
-      actualizarSocioLocal(socio.id, { racha, asistencias: socio.asistencias.filter((f) => f !== fechaLista) });
-    });
+    guardandoAsistencia.add(socio.id);
+    actualizarSocioLocal(socio.id, { asistencias: asistenciasAntes.filter((f) => f !== fechaLista) });
+    api(`/socios/${socio.id}/asistencia/${fechaLista}`, { method: 'DELETE' })
+      .then(({ racha }) => { guardandoAsistencia.delete(socio.id); actualizarSocioLocal(socio.id, { racha }); })
+      .catch((error) => { guardandoAsistencia.delete(socio.id); actualizarSocioLocal(socio.id, { asistencias: asistenciasAntes }); avisar(error.message); });
     return;
   }
-  conEspera(boton, async () => {
-    try {
-      const { racha, premiosNuevos, mensajes: avisos } = await api(`/socios/${socio.id}/asistencia`, { method: 'POST', body: { fecha: fechaLista } });
-      const premios = [...(socio.premios ?? []), ...premiosNuevos];
-      actualizarSocioLocal(socio.id, { racha, premios, asistencias: [...(socio.asistencias ?? []), fechaLista] });
+  guardandoAsistencia.add(socio.id);
+  actualizarSocioLocal(socio.id, { asistencias: [...asistenciasAntes, fechaLista] });
+  api(`/socios/${socio.id}/asistencia`, { method: 'POST', body: { fecha: fechaLista } })
+    .then(async ({ racha, premiosNuevos, mensajes: avisos }) => {
+      guardandoAsistencia.delete(socio.id);
+      const actual = socios.find((s) => s.id === socio.id);
+      actualizarSocioLocal(socio.id, { racha, premios: [...(actual.premios ?? []), ...premiosNuevos] });
       if (premiosNuevos.length) {
         const [premio] = premiosNuevos;
         mostrarMensaje(`🎉 ${socio.nombre} llegó a ${premio.racha} días: ¡se ganó: ${premio.nombre} ${premio.emoji}!`, avisos[0]);
@@ -928,10 +945,12 @@ $('#lista-asistencia').addEventListener('click', (evento) => {
       } else {
         avisar(`${socio.nombre.split(' ')[0]}: 🔥 ${racha.racha} día${racha.racha === 1 ? '' : 's'} de racha`);
       }
-    } catch (error) {
-      avisar(error.message);
-    }
-  });
+    })
+    .catch((error) => {
+      guardandoAsistencia.delete(socio.id);
+      actualizarSocioLocal(socio.id, { asistencias: asistenciasAntes });
+      avisar(`No se guardó la asistencia de ${socio.nombre.split(' ')[0]}: ${error.message}`);
+    });
 });
 
 function pintarPremios() {
@@ -1431,9 +1450,10 @@ $('#prod-eliminar').addEventListener('click', (evento) => {
 });
 
 $('#lista-movimientos').addEventListener('click', (evento) => {
-  const id = evento.target.dataset.deshacer;
+  const boton = evento.target.closest('button[data-deshacer]');
+  const id = boton?.dataset.deshacer;
   if (!id || !confirm('¿Deshacer este movimiento? Las piezas regresan como estaban.')) return;
-  conEspera(evento.target, async () => {
+  conEspera(boton, async () => {
     await api(`/movimientos/${id}`, { method: 'DELETE' });
     avisar('Movimiento deshecho');
     await cargarTienda();
@@ -1497,9 +1517,10 @@ async function cargarEliminados() {
 }
 
 $('#lista-eliminados').addEventListener('click', (evento) => {
-  const { restaurar, borrar, nombre } = evento.target.dataset;
+  const boton = evento.target.closest('button');
+  const { restaurar, borrar, nombre } = boton?.dataset ?? {};
   if (restaurar) {
-    conEspera(evento.target, async () => {
+    conEspera(boton, async () => {
       try {
         const socio = await api(`/eliminados/${restaurar}/restaurar`, { method: 'POST' });
         avisar(`${socio.nombre} regresó a la lista. Su pago queda pendiente desde hoy.`);
@@ -1510,7 +1531,7 @@ $('#lista-eliminados').addEventListener('click', (evento) => {
     });
   }
   if (borrar && confirm(`¿Borrar para siempre a ${nombre}? Ya no se podrá recuperar.`)) {
-    conEspera(evento.target, async () => {
+    conEspera(boton, async () => {
       await api(`/eliminados/${borrar}`, { method: 'DELETE' });
       avisar('Socio borrado para siempre');
       await cargarEliminados();
@@ -1675,9 +1696,10 @@ $('#exp-eliminar').addEventListener('click', (evento) => {
 });
 
 $('#historial-pagos').addEventListener('click', (evento) => {
-  const pagoId = evento.target.dataset.deshacer;
+  const boton = evento.target.closest('button[data-deshacer]');
+  const pagoId = boton?.dataset.deshacer;
   if (!pagoId || !confirm('¿Deshacer este pago? El próximo pago regresará al mes anterior.')) return;
-  conEspera(evento.target, async () => {
+  conEspera(boton, async () => {
     try {
       await api(`/socios/${socioAbierto.id}/pagos/${pagoId}`, { method: 'DELETE' });
       avisar('Pago deshecho');
@@ -1734,7 +1756,7 @@ $('#form-pago').addEventListener('submit', (evento) => {
 $('#exp-pagar').addEventListener('click', () => abrirPago(socioAbierto));
 
 $('#lista-socios').addEventListener('click', (evento) => {
-  const { accion, id } = evento.target.dataset;
+  const { accion, id } = evento.target.closest('button[data-accion]')?.dataset ?? {};
   const socio = socios.find((s) => s.id === id);
   if (!socio) return;
   if (accion === 'expediente') abrirExpediente(socio);
@@ -1786,6 +1808,7 @@ $('#lista-buscar').addEventListener('input', pintarLista);
 $('#lista-fecha').addEventListener('change', pintarLista);
 $('#filtro-estado').addEventListener('change', pintarSocios);
 
+document.body.classList.add('cargando-panel');
 config = await api('/config');
 $('#lista-fecha').value = config.hoy;
 $('#lista-fecha').max = config.hoy;
@@ -1806,6 +1829,7 @@ $('#info-eliminados').textContent = `Quien lleva ${config.mesesParaBaja} meses s
 $('#info-recordatorios').textContent = config.automaticos
   ? `Cada socio recibe solo sus mensajes: la bienvenida o la confirmación de pago cuando tú lo eliges, un aviso ${config.diasAntes} días antes de su pago, un recordatorio el día de su pago y una felicitación el día de su cumpleaños. El programa revisa las fechas cada mañana a las ${config.horaRecordatorios}:00 (canal: ${config.proveedor}).`
   : `Envío automático desactivado (canal: ${config.proveedor}). Usa el botón o "npm run recordatorios".`;
+document.body.classList.remove('cargando-panel');
 await Promise.all([cargarSocios(), cargarMensajes(), cargarTienda()]);
 </script>
 </body>

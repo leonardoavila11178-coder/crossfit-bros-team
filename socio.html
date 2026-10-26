@@ -5,7 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#000000">
   <title>Mi racha · CrossFit Bros Team</title>
+  <link rel="preconnect" href="https://script.google.com">
+  <link rel="preconnect" href="https://script.googleusercontent.com">
+  <link rel="dns-prefetch" href="https://script.googleusercontent.com">
   <link rel="icon" href="logo.jpg">
+  <link rel="apple-touch-icon" href="logo.jpg">
+  <meta name="apple-mobile-web-app-title" content="Mi racha CBT">
   <style>
     :root {
       --fondo: #000000;
@@ -84,6 +89,15 @@
     .imc-escala i:nth-child(3) { background: #ffc233; } .imc-escala i:nth-child(4) { background: #ff5c5c; }
     .imc-marca { position: absolute; top: -4px; width: 4px; height: 18px; background: var(--texto); border-radius: 2px; transform: translateX(-2px); }
     .imc small { color: var(--tenue); }
+    .cargando { display: grid; gap: 12px; margin-top: 4px; }
+    .cargando div { background: var(--superficie); border: 1px solid var(--borde); border-radius: 16px; }
+    .cargando .grande { height: 190px; display: grid; place-items: center; font-size: 3.5rem; }
+    .cargando .chica { height: 76px; }
+    @media (prefers-reduced-motion: no-preference) {
+      .cargando div { animation: parpadeo 1.2s ease-in-out infinite; }
+      @keyframes parpadeo { 50% { opacity: .45; } }
+    }
+    .reintentar { display: block; margin: 12px auto 0; padding: 10px 18px; border: 0; border-radius: 10px; background: var(--verde); color: #000; font: inherit; font-weight: 700; cursor: pointer; }
     .como ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
     @media (prefers-reduced-motion: no-preference) {
       .llama.viva { animation: latido 1.6s ease-in-out infinite; }
@@ -100,6 +114,9 @@
         <p id="saludo">Cargando tu racha…</p>
       </div>
     </header>
+    <div class="cargando" id="cargando" aria-hidden="true">
+      <div class="grande">🔥</div><div class="chica"></div><div class="chica"></div>
+    </div>
     <div id="contenido" hidden>
       <div id="aviso-premio" class="aviso-premio" hidden></div>
 
@@ -178,15 +195,49 @@
 
   <script src="config.js"></script>
   <script>
-    function pedirDatos() {
-      const token = new URLSearchParams(location.search).get('socio');
-      if (!token) return Promise.reject(new Error('Abre el enlace personal que te mandó CrossFit Bros Team.'));
-      return fetch(window.CBT_API, { method: 'POST', body: JSON.stringify({ accion: 'socio', token }) })
-        .then((respuesta) => respuesta.json())
-        .then((r) => (r.error ? Promise.reject(new Error(r.error)) : r.datos))
-        .catch((error) => Promise.reject(new Error(/fetch|Load failed/i.test(error.message)
-          ? 'No se pudo cargar tu racha. Revisa tu internet e inténtalo de nuevo.' : error.message)));
+    const TOKEN = new URLSearchParams(location.search).get('socio');
+    const LLAVE_DATOS = TOKEN && `cbt-socio-${TOKEN.slice(0, 12)}`;
+    let yaPinto = false;
+
+    function guardados() {
+      try { return JSON.parse(localStorage.getItem(LLAVE_DATOS) || 'null'); } catch { return null; }
     }
+
+    function pedirAGoogle(intento = 1) {
+      return fetch(window.CBT_API, { method: 'POST', body: JSON.stringify({ accion: 'socio', token: TOKEN }) })
+        .then((respuesta) => respuesta.json())
+        .catch((error) => {
+          if (intento < 2) return new Promise((listo) => setTimeout(listo, 1500)).then(() => pedirAGoogle(intento + 1));
+          const sinRed = new Error('No se pudo cargar tu racha. Revisa tu internet e inténtalo de nuevo.');
+          sinRed.reintentar = true;
+          throw sinRed;
+        })
+        .then((r) => {
+          if (r.error) {
+            try { localStorage.removeItem(LLAVE_DATOS); } catch {}
+            throw new Error(r.error);
+          }
+          try { localStorage.setItem(LLAVE_DATOS, JSON.stringify(r.datos)); } catch {}
+          return r.datos;
+        });
+    }
+
+    function pedirDatos() {
+      if (!TOKEN) return Promise.reject(new Error('Abre el enlace personal que te mandó CrossFit Bros Team.'));
+      const anterior = !yaPinto && guardados();
+      yaPinto = true;
+      if (anterior) {
+        // Se ve al instante lo de la vez pasada y en cuanto responde Google se actualiza.
+        pedirAGoogle().then(mostrar).catch(() => {});
+        return Promise.resolve(anterior);
+      }
+      return pedirAGoogle();
+    }
+
+    // Al volver a la página (por ejemplo, después de clase) se actualiza la racha.
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && TOKEN && !document.getElementById('contenido').hidden) pedirAGoogle().then(mostrar).catch(() => {});
+    });
 
     const $ = (id) => document.getElementById(id);
     const escapar = (texto) => String(texto ?? '').replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
@@ -348,11 +399,28 @@
       }
     } catch {}
 
-    pedirDatos().then(mostrar).catch((error) => {
-      $('saludo').textContent = '';
-      $('error').hidden = false;
-      $('error').textContent = error.message || 'No se pudo cargar tu racha. Intenta de nuevo.';
-    });
+    function cargar() {
+      $('error').hidden = true;
+      return pedirDatos().then((v) => {
+        $('cargando').hidden = true;
+        mostrar(v);
+      }).catch((error) => {
+        // Si ya se ve la racha (por ejemplo, guardada de la vez pasada), no se tapa con el error.
+        if (!$('contenido').hidden) return;
+        $('cargando').hidden = true;
+        $('saludo').textContent = '';
+        $('error').hidden = false;
+        $('error').textContent = error.message || 'No se pudo cargar tu racha. Intenta de nuevo.';
+        if (error.reintentar) {
+          const boton = document.createElement('button');
+          boton.className = 'reintentar';
+          boton.textContent = 'Reintentar';
+          boton.addEventListener('click', () => { $('cargando').hidden = false; cargar(); });
+          $('error').append(boton);
+        }
+      });
+    }
+    cargar();
   </script>
 </body>
 </html>

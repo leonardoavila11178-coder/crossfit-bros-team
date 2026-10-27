@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#000000">
+  <title>Demo · Mi racha · CrossFit Bros Team</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="logo.jpg">
+  <link rel="apple-touch-icon" href="logo.jpg">
+  <meta name="apple-mobile-web-app-title" content="Mi racha CBT">
+  <style>
+    :root {
+      --fondo: #000000;
+      --superficie: #111111;
+      --texto: #ffffff;
+      --tenue: #a3a3a3;
+      --borde: #2b2b2b;
+      --verde: #00ff00;
+      --verde-oscuro: #0b3d0b;
+      --ambar: #ffc233;
+      --rojo: #ff5c5c;
+      color-scheme: dark;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--fondo); color: var(--texto); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    main { max-width: 480px; margin: 0 auto; padding: 20px 16px 40px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+    header { display: flex; align-items: center; gap: 12px; }
+    header img { width: 56px; border-radius: 6px; }
+    header h1 { margin: 0; font-family: Impact, "Arial Black", sans-serif; font-weight: 400; color: var(--verde); font-size: 1.5rem; letter-spacing: .03em; text-transform: uppercase; }
+    header p { margin: 0; color: var(--tenue); }
+    .tarjeta { background: var(--superficie); border: 1px solid var(--borde); border-radius: 16px; padding: 16px; }
+    .racha { text-align: center; padding: 24px 16px; }
+    .llama { font-size: 4.5rem; line-height: 1; display: inline-block; }
+    .llama.apagada { filter: grayscale(1); opacity: .4; }
+    .numero { font-family: Impact, "Arial Black", sans-serif; font-size: 4.5rem; line-height: 1; color: var(--verde); margin-top: 6px; }
+    .racha.riesgo .numero { color: var(--ambar); }
+    .etiqueta { color: var(--tenue); text-transform: uppercase; letter-spacing: .08em; font-size: .8rem; font-weight: 700; }
+    .estado { margin: 12px 0 0; font-weight: 600; }
+    .racha.riesgo .estado { color: var(--ambar); }
+    .datos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .datos div { background: var(--superficie); border: 1px solid var(--borde); border-radius: 12px; padding: 10px; text-align: center; color: var(--tenue); font-size: .8rem; }
+    .datos b { display: block; color: var(--texto); font-size: 1.4rem; }
+    h2 { margin: 0 0 10px; font-size: 1rem; text-transform: uppercase; letter-spacing: .06em; }
+    .barra { height: 14px; background: var(--borde); border-radius: 999px; overflow: hidden; margin: 8px 0 6px; }
+    .barra span { display: block; height: 100%; background: var(--verde); border-radius: 999px; }
+    .premios { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+    .premios li { display: flex; gap: 12px; align-items: center; }
+    .premios .icono { font-size: 1.8rem; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 12px; background: var(--fondo); border: 1px solid var(--borde); flex: none; }
+    .premios li.bloqueado .icono { filter: grayscale(1); opacity: .45; }
+    .premios li.ganado .icono { border-color: var(--verde); }
+    .premios small { color: var(--tenue); display: block; }
+    .aviso-premio { background: var(--verde); color: #000; border-radius: 16px; padding: 14px 16px; font-weight: 700; margin-bottom: 16px; }
+    .calendario { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+    .calendario span { aspect-ratio: 1; border-radius: 8px; background: var(--borde); display: grid; place-items: center; font-size: .75rem; color: var(--tenue); }
+    .calendario span.vino { background: var(--verde); color: #000; font-weight: 700; }
+    .calendario span.cerrado { background: transparent; border: 1px dashed var(--borde); }
+    .calendario span.hoy { outline: 2px solid var(--texto); }
+    .calendario span.futuro { visibility: hidden; }
+    .dias-semana { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; color: var(--tenue); font-size: .7rem; margin-bottom: 6px; }
+    .reglas { color: var(--tenue); font-size: .85rem; line-height: 1.5; }
+    .error { text-align: center; color: var(--tenue); padding: 40px 16px; }
+    .mi-lugar, .nivel { display: flex; gap: 14px; align-items: center; }
+    .lugar-grande, .nivel-emoji { font-family: Impact, "Arial Black", sans-serif; font-size: 3rem; line-height: 1; color: var(--verde); min-width: 64px; text-align: center; }
+    .nivel-emoji { font-family: inherit; }
+    .mi-lugar small, .nivel small { display: block; color: var(--tenue); margin-top: 2px; }
+    .vecinos { color: var(--tenue); font-size: .9rem; margin: 12px 0; display: grid; gap: 4px; }
+    .ranking { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+    .ranking li { display: flex; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 10px; background: var(--fondo); border: 1px solid var(--borde); }
+    .ranking li.yo { border-color: var(--verde); background: var(--verde-oscuro); }
+    .ranking .pos { width: 30px; text-align: center; font-weight: 700; }
+    .ranking .quien { flex: 1; }
+    .ranking b { font-variant-numeric: tabular-nums; }
+    .en-juego { margin: 12px 0 0; color: var(--tenue); font-size: .9rem; }
+    .trofeos { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
+    .trofeos span { background: var(--verde-oscuro); border: 1px solid var(--verde); border-radius: 999px; padding: 4px 10px; font-size: .85rem; }
+    .imc form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .imc label { min-width: 0; }
+    .imc label { display: grid; gap: 4px; font-size: .85rem; color: var(--tenue); }
+    .imc input { width: 100%; box-sizing: border-box; padding: 10px; border-radius: 10px; border: 1px solid var(--borde); background: var(--fondo); color: var(--texto); font: inherit; font-size: 1rem; text-align: center; }
+    .imc input:focus { outline: 2px solid var(--verde); outline-offset: 1px; }
+    .imc button { grid-column: 1 / -1; padding: 12px; border: 0; border-radius: 10px; background: var(--verde); color: #000; font: inherit; font-weight: 700; cursor: pointer; }
+    .imc-resultado { margin-top: 14px; display: grid; gap: 8px; }
+    .imc-valor { display: flex; gap: 12px; align-items: baseline; }
+    .imc-valor b { font-family: Impact, "Arial Black", sans-serif; font-size: 2.6rem; font-weight: 400; color: var(--verde); line-height: 1; }
+    .imc-escala { display: grid; grid-template-columns: 8.5fr 6.5fr 5fr 10fr; height: 10px; border-radius: 999px; overflow: hidden; position: relative; }
+    .imc-escala i:nth-child(1) { background: #5ab0ff; } .imc-escala i:nth-child(2) { background: var(--verde); }
+    .imc-escala i:nth-child(3) { background: #ffc233; } .imc-escala i:nth-child(4) { background: #ff5c5c; }
+    .imc-marca { position: absolute; top: -4px; width: 4px; height: 18px; background: var(--texto); border-radius: 2px; transform: translateX(-2px); }
+    .imc small { color: var(--tenue); }
+    .cargando { display: grid; gap: 12px; margin-top: 4px; }
+    .cargando div { background: var(--superficie); border: 1px solid var(--borde); border-radius: 16px; }
+    .cargando .grande { height: 190px; display: grid; place-items: center; font-size: 3.5rem; }
+    .cargando .chica { height: 76px; }
+    @media (prefers-reduced-motion: no-preference) {
+      .cargando div { animation: parpadeo 1.2s ease-in-out infinite; }
+      @keyframes parpadeo { 50% { opacity: .45; } }
+    }
+    .reintentar { display: block; margin: 12px auto 0; padding: 10px 18px; border: 0; border-radius: 10px; background: var(--verde); color: #000; font: inherit; font-weight: 700; cursor: pointer; }
+    button, input, a { touch-action: manipulation; }
+    /* «hidden» siempre oculta, aunque la clase tenga su propio display (pantalla de carga, etc.). */
+    [hidden] { display: none !important; }
+    .musica form { display: flex; gap: 8px; }
+    .musica input { flex: 1; min-width: 0; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--borde); background: var(--fondo); color: var(--texto); font: inherit; font-size: 1rem; }
+    .musica input:focus { outline: 2px solid var(--verde); outline-offset: 1px; }
+    .musica button { padding: 10px 16px; border: 0; border-radius: 10px; background: var(--verde); color: #000; font: inherit; font-weight: 700; cursor: pointer; }
+    .musica button:disabled { opacity: .6; }
+    .musica ol { margin: 8px 0 0; padding-left: 22px; display: grid; gap: 4px; }
+    .musica small { color: var(--tenue); display: block; margin-top: 8px; }
+    .como ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+    @media (prefers-reduced-motion: no-preference) {
+      .llama.viva { animation: latido 1.6s ease-in-out infinite; }
+      @keyframes latido { 50% { transform: scale(1.08); } }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <img src="logo.jpg" alt="Logo de CrossFit Bros Team">
+      <div>
+        <h1>CrossFit Bros Team</h1>
+        <p id="saludo">Cargando tu racha…</p>
+      </div>
+    </header>
+    <div class="cargando" id="cargando" aria-hidden="true">
+      <div class="grande">🔥</div><div class="chica"></div><div class="chica"></div>
+    </div>
+    <div id="contenido" hidden>
+      <div id="aviso-premio" class="aviso-premio" hidden></div>
+
+      <section class="tarjeta racha" id="tarjeta-racha">
+        <div class="llama" id="llama">🔥</div>
+        <div class="numero" id="numero-racha">0</div>
+        <div class="etiqueta" id="texto-dias">días de racha</div>
+        <p class="estado" id="estado-racha"></p>
+      </section>
+
+      <section class="datos" style="margin-top:16px">
+        <div><b id="puntos">0</b>puntos</div>
+        <div><b id="mejor">0</b>mejor racha</div>
+        <div><b id="clases">0</b>clases</div>
+      </section>
+
+      <section class="tarjeta" style="margin-top:16px">
+        <h2>🏆 Ranking de <span id="ranking-mes"></span></h2>
+        <div class="mi-lugar">
+          <div class="lugar-grande" id="mi-lugar">—</div>
+          <div><b id="mi-lugar-texto"></b><small id="puntos-mes"></small></div>
+        </div>
+        <div class="vecinos" id="vecinos"></div>
+        <ol class="ranking" id="top"></ol>
+        <p class="en-juego" id="en-juego"></p>
+        <div class="trofeos" id="trofeos" hidden></div>
+      </section>
+
+      <section class="tarjeta" style="margin-top:16px">
+        <h2>Tu nivel</h2>
+        <div class="nivel">
+          <div class="nivel-emoji" id="nivel-emoji"></div>
+          <div><b id="nivel-nombre"></b><small id="nivel-siguiente"></small></div>
+        </div>
+        <div class="barra" id="barra-nivel"><span id="progreso-nivel"></span></div>
+      </section>
+
+      <section class="tarjeta" style="margin-top:16px">
+        <h2>🎁 Premios GRATIS</h2>
+        <p id="siguiente" class="reglas"></p>
+        <div class="barra" id="barra" hidden><span id="progreso"></span></div>
+        <ul class="premios" id="premios"></ul>
+      </section>
+
+      <section class="tarjeta" style="margin-top:16px">
+        <h2>Tus últimas 5 semanas</h2>
+        <div class="dias-semana"><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span></div>
+        <div class="calendario" id="calendario"></div>
+      </section>
+
+      <section class="tarjeta musica" style="margin-top:16px">
+        <h2>🎵 ¿Qué música quieres en el WOD?</h2>
+        <p style="margin:0 0 10px">Comparte tu artista o canción favorita y la ponemos en el box. 🔊</p>
+        <form id="form-musica">
+          <input id="musica-texto" maxlength="80" placeholder="Ej. Eminem · Till I Collapse" aria-label="Tu artista o canción favorita" autocomplete="off">
+          <button type="submit" id="musica-enviar">Enviar</button>
+        </form>
+        <small id="musica-estado" role="status"></small>
+        <div id="musica-top" hidden>
+          <small>🔥 Lo más pedido en el box</small>
+          <ol id="musica-lista"></ol>
+        </div>
+      </section>
+
+      <section class="tarjeta imc" style="margin-top:16px">
+        <h2>⚖️ Tu índice de masa corporal</h2>
+        <form id="form-imc" novalidate>
+          <label>Peso (kg) <input id="imc-peso" type="number" inputmode="decimal" min="20" max="300" step="0.1" placeholder="75"></label>
+          <label>Talla (cm) <input id="imc-talla" type="number" inputmode="decimal" min="100" max="250" step="0.5" placeholder="170"></label>
+          <label>Edad <input id="imc-edad" type="number" inputmode="numeric" min="5" max="110" step="1" placeholder="28"></label>
+          <button type="submit">Calcular</button>
+        </form>
+        <div class="imc-resultado" id="imc-resultado" hidden>
+          <div class="imc-valor"><b id="imc-numero"></b><span id="imc-categoria"></span></div>
+          <div class="imc-escala" aria-hidden="true"><i></i><i></i><i></i><i></i><span class="imc-marca" id="imc-marca"></span></div>
+          <p id="imc-mensaje" style="margin:0"></p>
+          <small id="imc-nota"></small>
+        </div>
+        <small id="imc-error" role="alert"></small>
+      </section>
+
+      <section class="tarjeta reglas como" style="margin-top:16px">
+        <h2>Cómo ganar puntos</h2>
+        <ul id="como-funciona"></ul>
+        <p id="proximo-pago"></p>
+      </section>
+    </div>
+    <p id="error" class="error" hidden></p>
+  </main>
+
+  <script>
+    function pedirDatos() { return Promise.resolve({"nombre":"Ana","hoy":"2026-10-27","finDeSemana":false,"racha":50,"mejorRacha":50,"clases":50,"vinoHoy":true,"ultimaAsistencia":"2026-10-27","estado":"activa","siguientePremio":{"racha":170,"nombre":"Playera GRATIS de CrossFit Bros Team","articulo":"una","emoji":"👕","faltan":120},"puntos":1831,"nivel":{"nombre":"Bronce","emoji":"🥉","minimo":1000,"siguiente":{"nombre":"Plata","emoji":"🥈","minimo":2000,"faltan":169}},"puntosMes":{"clases":190,"racha":100,"bonos":40,"wod":341,"podio":100,"campeon":0,"total":771},"trofeos":[{"mes":"agosto 2026","lugar":1,"puntos":300},{"mes":"septiembre 2026","lugar":1,"puntos":300}],"ranking":{"mes":"octubre","posicion":2,"participantes":7,"top":[{"nombre":"Beto R.","puntos":972,"posicion":1,"nivel":"🥈","esTu":false},{"nombre":"Ana L.","puntos":771,"posicion":2,"nivel":"🥉","esTu":true},{"nombre":"Fernanda T.","puntos":755,"posicion":3,"nivel":"🥉","esTu":false},{"nombre":"Diego H.","puntos":353,"posicion":4,"nivel":"🔩","esTu":false},{"nombre":"Sofía R.","puntos":310,"posicion":5,"nivel":"🐣","esTu":false},{"nombre":"Jorge C.","puntos":106,"posicion":6,"nivel":"🐣","esTu":false},{"nombre":"Carolina V.","puntos":83,"posicion":7,"nivel":"🐣","esTu":false}],"arriba":{"nombre":"Beto R.","puntos":972,"posicion":1,"nivel":"🥈","esTu":false},"abajo":{"nombre":"Fernanda T.","puntos":755,"posicion":3,"nivel":"🥉","esTu":false}},"reglas":{"puntosPorClase":10,"bonoDeRacha":50,"bonos":{"puntual":{"nombre":"Llegó puntual","corto":"Puntual","emoji":"⏰","puntos":5}},"pesos":{"alto":{"nombre":"Alto","puntos":15},"medio":{"nombre":"Medio","puntos":10},"bajo":{"nombre":"Bajo","puntos":5}},"resistencias":{"alta":{"nombre":"Alta","puntos":10},"media":{"nombre":"Media","puntos":5},"baja":{"nombre":"Baja","puntos":0}},"dificultades":{"dificil":{"nombre":"Difícil","puntos":10},"media":{"nombre":"Media","puntos":5},"baja":{"nombre":"Baja","puntos":0}},"puntosPorResultado":[10,6,3],"podioDelDia":[15,10,5],"podioDelMes":[300,200,100],"tiposDeWod":{"fortime":{"nombre":"For Time","resultado":"tiempo","principal":true},"amrap":{"nombre":"AMRAP","resultado":"rondas","principal":true},"emom":{"nombre":"EMOM","resultado":"ninguno","principal":true},"fuerza":{"nombre":"Fuerza / levantamiento","resultado":"ninguno","principal":true},"rft":{"nombre":"Rondas por tiempo (RFT)","resultado":"tiempo"},"chipper":{"nombre":"Chipper","resultado":"tiempo"},"hero":{"nombre":"WOD Hero","resultado":"tiempo"},"benchmark":{"nombre":"Benchmark (Fran, Grace, Cindy…)","resultado":"tiempo"},"parejas":{"nombre":"En parejas o equipos","resultado":"tiempo"},"cardio":{"nombre":"Cardio (correr, remo, bici, ski)","resultado":"tiempo"},"tabata":{"nombre":"Tabata","resultado":"reps"},"deathby":{"nombre":"Death By","resultado":"rondas"},"escalera":{"nombre":"Escalera (ladder)","resultado":"reps"},"maxreps":{"nombre":"Máximo de repeticiones","resultado":"reps"},"intervalos":{"nombre":"Intervalos","resultado":"ninguno"},"olimpicos":{"nombre":"Halterofilia (olímpicos)","resultado":"ninguno"},"gimnasticos":{"nombre":"Gimnásticos / habilidades","resultado":"ninguno"},"core":{"nombre":"Core / accesorios","resultado":"ninguno"},"otro":{"nombre":"Otro","resultado":"ninguno"}},"resultados":{"tiempo":{"nombre":"Tiempo","ejemplo":"12:34","ayuda":"minutos:segundos","menorEsMejor":true},"rondas":{"nombre":"Rondas","ejemplo":"7+12","ayuda":"rondas+repeticiones","menorEsMejor":false},"reps":{"nombre":"Repeticiones","ejemplo":"150","ayuda":"total de repeticiones","menorEsMejor":false},"ninguno":null},"niveles":[{"nombre":"Novato","emoji":"🐣","minimo":0},{"nombre":"Hierro","emoji":"🔩","minimo":400},{"nombre":"Bronce","emoji":"🥉","minimo":1000},{"nombre":"Plata","emoji":"🥈","minimo":2000},{"nombre":"Oro","emoji":"🥇","minimo":4000},{"nombre":"Diamante","emoji":"💎","minimo":7000},{"nombre":"Leyenda Bros","emoji":"👑","minimo":11000}],"premios":[{"racha":10,"nombre":"Scoop de creatina GRATIS","articulo":"un","emoji":"🥄"},{"racha":20,"nombre":"Agua GRATIS","articulo":"un","emoji":"💧"},{"racha":30,"nombre":"Scoop de proteína GRATIS","articulo":"un","emoji":"🥤"},{"racha":50,"nombre":"Monster GRATIS","articulo":"un","emoji":"⚡"},{"racha":170,"nombre":"Playera GRATIS de CrossFit Bros Team","articulo":"una","emoji":"👕"}],"premioLeyenda":{"nombre":"Mensualidad GRATIS","emoji":"👑"},"diasSinVenir":2},"asistenciasRecientes":["2026-09-23","2026-09-24","2026-09-25","2026-09-28","2026-09-29","2026-09-30","2026-10-01","2026-10-02","2026-10-05","2026-10-06","2026-10-07","2026-10-08","2026-10-09","2026-10-12","2026-10-13","2026-10-14","2026-10-15","2026-10-16","2026-10-19","2026-10-20","2026-10-21","2026-10-22","2026-10-23","2026-10-26","2026-10-27"],"premios":[{"nombre":"Scoop de creatina GRATIS","emoji":"🥄","racha":10,"ganadoEn":"2026-09-01","entregadoEn":"2026-09-01"},{"nombre":"Agua GRATIS","emoji":"💧","racha":20,"ganadoEn":"2026-09-15","entregadoEn":"2026-09-15"},{"nombre":"Scoop de proteína GRATIS","emoji":"🥤","racha":30,"ganadoEn":"2026-09-29","entregadoEn":"2026-09-29"},{"nombre":"Monster GRATIS","emoji":"⚡","racha":50,"ganadoEn":"2026-10-27","entregadoEn":null}],"catalogo":[{"racha":10,"nombre":"Scoop de creatina GRATIS","articulo":"un","emoji":"🥄"},{"racha":20,"nombre":"Agua GRATIS","articulo":"un","emoji":"💧"},{"racha":30,"nombre":"Scoop de proteína GRATIS","articulo":"un","emoji":"🥤"},{"racha":50,"nombre":"Monster GRATIS","articulo":"un","emoji":"⚡"},{"racha":170,"nombre":"Playera GRATIS de CrossFit Bros Team","articulo":"una","emoji":"👕"}],"proximoPago":"2026-11-27","diasSinVenir":2,"musica":"","musicaMasPedida":[]}); }
+    function enviarMusica(texto) { const t = texto.trim(); return Promise.resolve({ musica: t, musicaMasPedida: t ? [{ texto: t, veces: 1 }, { texto: 'Bad Bunny', veces: 3 }, { texto: 'Linkin Park', veces: 2 }] : [] }); }
+
+    const $ = (id) => document.getElementById(id);
+    const escapar = (texto) => String(texto ?? '').replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+    const fechaLarga = (f) => new Date(`${f}T12:00:00`).toLocaleDateString('es-MX', { day: 'numeric', month: 'long' });
+
+    function sumarDias(fecha, dias) {
+      const d = new Date(`${fecha}T12:00:00Z`);
+      d.setUTCDate(d.getUTCDate() + dias);
+      return d.toISOString().slice(0, 10);
+    }
+
+    function mostrar(v) {
+      $('saludo').textContent = `¡Hola, ${v.nombre}! 💪`;
+      $('numero-racha').textContent = v.racha;
+      $('texto-dias').textContent = v.racha === 1 ? 'día de racha' : 'días de racha';
+      $('llama').className = v.racha > 0 ? `llama${v.vinoHoy ? ' viva' : ''}` : 'llama apagada';
+      $('tarjeta-racha').classList.toggle('riesgo', v.estado === 'ultimoDia');
+      $('estado-racha').textContent = {
+        sinEmpezar: 'Tu racha empieza en tu próxima clase. ¡Te esperamos!',
+        perdida: v.finDeSemana ? 'Perdiste tu racha, pero el lunes puedes empezar una nueva. ¡Vamos! 🔥' : 'Perdiste tu racha, pero hoy puedes empezar una nueva. ¡Vamos! 🔥',
+        ultimoDia: '⚠️ Hoy es tu último día para no perder tu racha. ¡Ven al box!',
+        activa: v.vinoHoy ? '¡Ya sumaste hoy! Nos vemos en la próxima clase.'
+          : v.finDeSemana ? 'Hoy no hay clase: tu racha está a salvo. ¡Nos vemos el lunes! 💪' : '¡Vas muy bien! Ven hoy para seguir sumando.',
+      }[v.estado];
+      $('puntos').textContent = v.puntos.toLocaleString('es-MX');
+      $('mejor').textContent = v.mejorRacha;
+      $('clases').textContent = v.clases;
+
+      // Ranking del mes: mi lugar, quién va arriba y abajo, y el top 10.
+      const medalla = (lugar) => ['🥇', '🥈', '🥉'][lugar - 1] ?? `${lugar}º`;
+      const rk = v.ranking;
+      const misPuntos = v.puntosMes.total;
+      $('ranking-mes').textContent = rk.mes;
+      $('mi-lugar').textContent = misPuntos ? medalla(rk.posicion) : '—';
+      $('mi-lugar-texto').textContent = misPuntos ? `Vas en el lugar ${rk.posicion} de ${rk.participantes}` : 'Aún no sumas puntos este mes';
+      $('puntos-mes').textContent = `${misPuntos.toLocaleString('es-MX')} puntos este mes · cada mes todos empiezan en cero`;
+      const vecinos = [];
+      if (rk.arriba) vecinos.push(`⬆️ Arriba de ti: ${rk.arriba.nombre} con ${rk.arriba.puntos} pts. Te faltan ${rk.arriba.puntos - misPuntos + 1} para pasarle.`);
+      else if (misPuntos) vecinos.push('👑 ¡Vas en primer lugar! Que nadie te alcance.');
+      if (rk.abajo) vecinos.push(`⬇️ Detrás de ti: ${rk.abajo.nombre} con ${rk.abajo.puntos} pts.`);
+      $('vecinos').innerHTML = vecinos.map((t) => `<span>${escapar(t)}</span>`).join('');
+      $('top').innerHTML = rk.top.map((f) => `
+        <li class="${f.esTu ? 'yo' : ''}"><span class="pos">${f.puntos ? medalla(f.posicion) : '—'}</span>
+          <span class="quien">${f.nivel} ${escapar(f.nombre)}${f.esTu ? ' (tú)' : ''}</span><b>${f.puntos}</b></li>`).join('');
+
+      const pm = v.reglas.podioDelMes;
+      $('en-juego').textContent = `🏆 En juego al cerrar ${rk.mes}: 🥇 +${pm[0]} · 🥈 +${pm[1]} · 🥉 +${pm[2]} puntos.`;
+      $('trofeos').hidden = v.trofeos.length === 0;
+      $('trofeos').innerHTML = v.trofeos.map((t) => `<span>${medalla(t.lugar)} ${t.lugar === 1 ? 'Campeón' : `${t.lugar}º lugar`} de ${escapar(t.mes)}</span>`).join('');
+
+      // Nivel por los puntos de siempre.
+      $('nivel-emoji').textContent = v.nivel.emoji;
+      $('nivel-nombre').textContent = `${v.nivel.nombre} · ${v.puntos.toLocaleString('es-MX')} puntos`;
+      $('nivel-siguiente').textContent = v.nivel.siguiente
+        ? `Te faltan ${v.nivel.siguiente.faltan.toLocaleString('es-MX')} puntos para ${v.nivel.siguiente.emoji} ${v.nivel.siguiente.nombre}`
+        : `¡Llegaste al nivel máximo! Eres leyenda del box y te ganaste ${v.reglas.premioLeyenda.nombre} ${v.reglas.premioLeyenda.emoji}`;
+      const avanceNivel = v.nivel.siguiente ? (v.puntos - v.nivel.minimo) / (v.nivel.siguiente.minimo - v.nivel.minimo) : 1;
+      $('progreso-nivel').style.width = `${Math.round(Math.max(0, Math.min(1, avanceNivel)) * 100)}%`;
+
+      const r = v.reglas;
+      $('como-funciona').innerHTML = [
+        `🔥 Cada clase: +${r.puntosPorClase} puntos y +1 día de racha.`,
+        `Tu racha sigue mientras no faltes más de ${v.diasSinVenir} días seguidos (sábados y domingos no cuentan).`,
+        `📈 Cada 10 días de racha (10, 20, 30…): +${r.bonoDeRacha} puntos.`,
+        ...Object.values(r.bonos).map((b) => `${b.emoji} ${b.nombre}: +${b.puntos} (lo marca tu coach).`),
+        `🏋️ WOD, según tu nivel: peso alto +${r.pesos.alto.puntos}, medio +${r.pesos.medio.puntos}, bajo +${r.pesos.bajo.puntos} · resistencia alta +${r.resistencias.alta.puntos}, media +${r.resistencias.media.puntos} · WOD difícil +${r.dificultades.dificil.puntos}, dificultad media +${r.dificultades.media.puntos}.`,
+        `⏱️ Mejor tiempo, más rondas o más repeticiones del día: 🥇 +${r.puntosPorResultado[0]} 🥈 +${r.puntosPorResultado[1]} 🥉 +${r.puntosPorResultado[2]}.`,
+        `🏆 Podio del día (más puntos ese día): 🥇 +${r.podioDelDia[0]} 🥈 +${r.podioDelDia[1]} 🥉 +${r.podioDelDia[2]}.`,
+        `👑 Podio del mes: 🥇 +${r.podioDelMes[0]} 🥈 +${r.podioDelMes[1]} 🥉 +${r.podioDelMes[2]}. Llega a ${r.niveles[r.niveles.length - 1].emoji} ${r.niveles[r.niveles.length - 1].nombre} y gánate ${r.premioLeyenda.nombre}.`,
+        `🎁 Premios GRATIS por racha: ${v.catalogo.map((p) => `${p.racha} días = ${p.nombre} ${p.emoji}`).join(' · ')}.`,
+      ].map((t) => `<li>${escapar(t)}</li>`).join('');
+
+      const porRecoger = v.premios.filter((p) => !p.entregadoEn);
+      $('aviso-premio').hidden = porRecoger.length === 0;
+      $('aviso-premio').textContent = porRecoger.map((p) => `🎉 ¡GANASTE! Tu ${p.nombre} ${p.emoji} te espera en recepción. ¡Pídelo ya!`).join(' ');
+
+      if (v.siguientePremio) {
+        const anterior = [...v.catalogo].reverse().find((p) => p.racha < v.siguientePremio.racha)?.racha ?? 0;
+        const avance = Math.max(0, Math.min(1, (v.racha - anterior) / (v.siguientePremio.racha - anterior)));
+        $('siguiente').textContent = `¡Te faltan solo ${v.siguientePremio.faltan} días de racha para tu ${v.siguientePremio.nombre} ${v.siguientePremio.emoji}! Tú puedes 🔥`;
+        $('barra').hidden = false;
+        $('progreso').style.width = `${Math.round(avance * 100)}%`;
+      } else {
+        $('siguiente').textContent = '¡Ya llegaste a todos los premios! Eres leyenda del box. 🏆';
+      }
+      $('premios').innerHTML = v.catalogo.map((p) => {
+        const veces = v.premios.filter((g) => g.racha === p.racha).length;
+        const clase = veces ? 'ganado' : 'bloqueado';
+        const detalle = veces ? `Ganado ${veces === 1 ? '' : `${veces} veces`}`.trim() : `Llega a ${p.racha} días de racha y es tuyo`;
+        return `<li class="${clase}"><span class="icono">${p.emoji}</span><span><b>${p.nombre}</b><small>${detalle}</small></span></li>`;
+      }).join('');
+
+      // Calendario de las últimas 5 semanas, de lunes a domingo (fin de semana cerrado).
+      const diaSemana = (new Date(`${v.hoy}T12:00:00Z`).getUTCDay() + 6) % 7;
+      const inicio = sumarDias(v.hoy, -diaSemana - 28);
+      const vino = new Set(v.asistenciasRecientes);
+      const celdas = [];
+      for (let i = 0; i < 35; i++) {
+        const fecha = sumarDias(inicio, i);
+        const clases = [vino.has(fecha) ? 'vino' : '', i % 7 >= 5 ? 'cerrado' : '', fecha === v.hoy ? 'hoy' : '', fecha > v.hoy ? 'futuro' : ''];
+        celdas.push(`<span class="${clases.join(' ').trim()}" title="${fecha}">${Number(fecha.slice(8))}</span>`);
+      }
+      $('calendario').innerHTML = celdas.join('');
+      pintarMusica(v);
+      $('proximo-pago').textContent = v.proximoPago ? `Tu próximo pago de la mensualidad es el ${fechaLarga(v.proximoPago)}.` : '';
+      $('contenido').hidden = false;
+    }
+
+    // Índice de masa corporal: IMC = peso (kg) / talla (m)². Se calcula en el celular del socio
+    // y solo se guarda en ese celular, para no tener que escribirlo cada vez.
+    const CATEGORIAS_IMC = [
+      { hasta: 18.5, nombre: 'Peso bajo', mensaje: 'Estás por debajo del rango recomendado. Platica con tu coach para sumar fuerza y masa muscular. 💪' },
+      { hasta: 25, nombre: 'Peso saludable', mensaje: '¡Estás en el rango saludable! Sigue entrenando así. 🔥' },
+      { hasta: 30, nombre: 'Sobrepeso', mensaje: 'Estás un poco arriba del rango saludable. Con tu racha y buena alimentación lo vas a lograr. 💪' },
+      { hasta: 35, nombre: 'Obesidad grado 1', mensaje: 'Cada clase cuenta. Tu coach te puede ayudar con un plan para bajar poco a poco. 🔥' },
+      { hasta: 40, nombre: 'Obesidad grado 2', mensaje: 'Cada clase cuenta. Te recomendamos acompañarlo con un médico o nutriólogo. 💪' },
+      { hasta: Infinity, nombre: 'Obesidad grado 3', mensaje: 'Cada clase cuenta. Te recomendamos acompañarlo con un médico o nutriólogo. 💪' },
+    ];
+    const LLAVE_IMC = 'cbt-imc';
+
+    function calcularImc(peso, tallaCm) {
+      const metros = tallaCm / 100;
+      return Math.round((peso / (metros * metros)) * 10) / 10;
+    }
+
+    function mostrarImc(guardar) {
+      const peso = Number($('imc-peso').value);
+      let talla = Number($('imc-talla').value);
+      const edad = Number($('imc-edad').value);
+      if (talla > 0 && talla < 3) talla *= 100; // si la escribió en metros (1.70)
+      $('imc-error').textContent = '';
+      if (!(peso >= 20 && peso <= 300) || !(talla >= 100 && talla <= 250) || !(edad >= 5 && edad <= 110)) {
+        $('imc-resultado').hidden = true;
+        if (guardar) $('imc-error').textContent = 'Escribe tu peso en kg (ej. 75), tu talla en cm (ej. 170) y tu edad.';
+        return;
+      }
+      const imc = calcularImc(peso, talla);
+      const categoria = CATEGORIAS_IMC.find((c) => imc < c.hasta);
+      $('imc-numero').textContent = imc.toFixed(1);
+      $('imc-categoria').textContent = categoria.nombre;
+      $('imc-mensaje').textContent = categoria.mensaje;
+      // La barra va de 10 a 40: bajo, saludable, sobrepeso y obesidad.
+      $('imc-marca').style.left = `${Math.max(0, Math.min(100, ((imc - 10) / 30) * 100))}%`;
+      const notas = ['El IMC no distingue músculo de grasa: si entrenas fuerte puede salir alto aunque estés en forma.'];
+      if (edad < 18) notas.unshift('En menores de 18 años el IMC se interpreta con tablas por edad: confírmalo con tu médico.');
+      if (edad >= 65) notas.unshift('Después de los 65 años un IMC un poco más alto (hasta 27) suele considerarse adecuado.');
+      $('imc-nota').textContent = notas.join(' ');
+      $('imc-resultado').hidden = false;
+      if (guardar) {
+        try { localStorage.setItem(LLAVE_IMC, JSON.stringify({ peso: $('imc-peso').value, talla: $('imc-talla').value, edad: $('imc-edad').value })); } catch {}
+      }
+    }
+
+    $('form-imc').addEventListener('submit', (evento) => { evento.preventDefault(); mostrarImc(true); });
+    try {
+      const guardado = JSON.parse(localStorage.getItem(LLAVE_IMC) || 'null');
+      if (guardado) {
+        $('imc-peso').value = guardado.peso; $('imc-talla').value = guardado.talla; $('imc-edad').value = guardado.edad;
+        mostrarImc(false);
+      }
+    } catch {}
+
+    // Música para el WOD.
+    // Si el programa de Google todavía es la versión anterior (sin música), la página igual abre.
+    function pintarMusica(v) {
+      const masPedida = v.musicaMasPedida || [];
+      if (document.activeElement !== $('musica-texto')) $('musica-texto').value = v.musica || '';
+      $('musica-estado').textContent = v.musica ? `Tu canción para el WOD: ${v.musica} 🎶` : '';
+      $('musica-top').hidden = !masPedida.length;
+      $('musica-lista').innerHTML = masPedida
+        .map((m) => `<li>${escapar(m.texto)}${m.veces > 1 ? ` <small style="display:inline">· ${m.veces} votos</small>` : ''}</li>`).join('');
+    }
+
+    $('form-musica').addEventListener('submit', (evento) => {
+      evento.preventDefault();
+      if (typeof enviarMusica !== 'function') return;
+      const boton = $('musica-enviar');
+      boton.disabled = true;
+      $('musica-estado').textContent = 'Enviando…';
+      enviarMusica($('musica-texto').value)
+        .then((r) => {
+          pintarMusica(r);
+          $('musica-estado').textContent = r.musica ? `¡Listo! Pediste: ${r.musica} 🎶` : 'Quitaste tu canción.';
+        })
+        .catch((error) => { $('musica-estado').textContent = error.message || 'No se pudo enviar. Intenta de nuevo.'; })
+        .finally(() => { boton.disabled = false; });
+    });
+
+    function cargar() {
+      $('error').hidden = true;
+      return pedirDatos().then((v) => {
+        $('cargando').hidden = true;
+        mostrar(v);
+      }).catch((error) => {
+        // Si ya se ve la racha (por ejemplo, guardada de la vez pasada), no se tapa con el error.
+        if (!$('contenido').hidden) return;
+        $('cargando').hidden = true;
+        $('saludo').textContent = '';
+        $('error').hidden = false;
+        $('error').textContent = error.message || 'No se pudo cargar tu racha. Intenta de nuevo.';
+        if (error.reintentar) {
+          const boton = document.createElement('button');
+          boton.className = 'reintentar';
+          boton.textContent = 'Reintentar';
+          boton.addEventListener('click', () => { $('cargando').hidden = false; cargar(); });
+          $('error').append(boton);
+        }
+      });
+    }
+    cargar();
+  </script>
+</body>
+</html>

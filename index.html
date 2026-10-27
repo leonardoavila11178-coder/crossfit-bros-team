@@ -317,6 +317,13 @@ button, a, label, input, select, summary { touch-action: manipulation; }
 body.cargando-panel main button, body.cargando-panel .encabezado button { pointer-events: none; opacity: .55; }
 body.cargando-panel .encabezado::after { content: "Cargando…"; display: block; color: var(--tenue); font-size: .85rem; margin-top: 6px; }
 button.llego[aria-busy="true"] { opacity: .7; }
+
+/* Música que piden los socios */
+.musica-panel { margin-top: 20px; background: var(--superficie); border: 1px solid var(--borde); border-radius: 12px; padding: 12px 14px; }
+.musica-panel h3 { margin-top: 0; }
+.mas-pedida { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.mas-pedida span { background: var(--ok-fondo); color: var(--texto); border-radius: 999px; padding: 4px 10px; font-size: .85rem; }
+.musica-panel .historial { max-height: 260px; }
 </style>
 </head>
 <body>
@@ -427,6 +434,11 @@ button.llego[aria-busy="true"] { opacity: .7; }
         <div class="botones"><button type="submit" id="guardar-wod">Guardar y repartir puntos</button></div>
       </form>
       <div id="wod-podio"></div>
+      <div class="musica-panel">
+        <h3>🎵 Música que piden tus socios</h3>
+        <p class="sub">Cada socio la escribe en su página. Úsala para armar la playlist del WOD.</p>
+        <div id="musica-pedida"></div>
+      </div>
     </section>
 
     <section id="vista-ranking" hidden>
@@ -1131,6 +1143,7 @@ async function cargarWod() {
   wodDificultad = wodActual?.dificultad ?? null;
   $('#error-wod').textContent = '';
   pintarWod();
+  cargarMusica().catch(() => {});
 }
 
 function pintarWod() {
@@ -1218,6 +1231,14 @@ $('#wod-atletas').addEventListener('click', (evento) => {
   });
 });
 $('#wod-fecha').addEventListener('change', cargarWod);
+
+async function cargarMusica() {
+  const { masPedida, pedidos } = await api('/musica');
+  $('#musica-pedida').innerHTML = pedidos.length
+    ? `<p class="mas-pedida">${masPedida.map((m) => `<span>🔥 ${escapar(m.texto)}${m.veces > 1 ? ` <b>×${m.veces}</b>` : ''}</span>`).join('')}</p>
+       <ul class="historial">${pedidos.map((p) => `<li><span><strong>${escapar(p.nombre)}</strong> · ${escapar(p.texto)}</span><span class="tel">${fecha(p.fecha)}</span></li>`).join('')}</ul>`
+    : '<p class="tel">Todavía nadie ha pedido música. Diles que la escriban en su página personal. 🎶</p>';
+}
 
 $('#form-wod').addEventListener('submit', (evento) => {
   evento.preventDefault();

@@ -99,6 +99,13 @@
     }
     .reintentar { display: block; margin: 12px auto 0; padding: 10px 18px; border: 0; border-radius: 10px; background: var(--verde); color: #000; font: inherit; font-weight: 700; cursor: pointer; }
     button, input, a { touch-action: manipulation; }
+    .musica form { display: flex; gap: 8px; }
+    .musica input { flex: 1; min-width: 0; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--borde); background: var(--fondo); color: var(--texto); font: inherit; font-size: 1rem; }
+    .musica input:focus { outline: 2px solid var(--verde); outline-offset: 1px; }
+    .musica button { padding: 10px 16px; border: 0; border-radius: 10px; background: var(--verde); color: #000; font: inherit; font-weight: 700; cursor: pointer; }
+    .musica button:disabled { opacity: .6; }
+    .musica ol { margin: 8px 0 0; padding-left: 22px; display: grid; gap: 4px; }
+    .musica small { color: var(--tenue); display: block; margin-top: 8px; }
     .como ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
     @media (prefers-reduced-motion: no-preference) {
       .llama.viva { animation: latido 1.6s ease-in-out infinite; }
@@ -168,6 +175,20 @@
         <div class="calendario" id="calendario"></div>
       </section>
 
+      <section class="tarjeta musica" style="margin-top:16px">
+        <h2>🎵 ¿Qué música quieres en el WOD?</h2>
+        <p style="margin:0 0 10px">Comparte tu artista o canción favorita y la ponemos en el box. 🔊</p>
+        <form id="form-musica">
+          <input id="musica-texto" maxlength="80" placeholder="Ej. Eminem · Till I Collapse" aria-label="Tu artista o canción favorita" autocomplete="off">
+          <button type="submit" id="musica-enviar">Enviar</button>
+        </form>
+        <small id="musica-estado" role="status"></small>
+        <div id="musica-top" hidden>
+          <small>🔥 Lo más pedido en el box</small>
+          <ol id="musica-lista"></ol>
+        </div>
+      </section>
+
       <section class="tarjeta imc" style="margin-top:16px">
         <h2>⚖️ Tu índice de masa corporal</h2>
         <form id="form-imc" novalidate>
@@ -233,6 +254,16 @@
         return Promise.resolve(anterior);
       }
       return pedirAGoogle();
+    }
+
+    function enviarMusica(texto) {
+      return fetch(window.CBT_API, { method: 'POST', body: JSON.stringify({ accion: 'musica', token: TOKEN, texto }) })
+        .catch(() => { throw new Error('No se pudo enviar. Revisa tu internet e inténtalo de nuevo.'); })
+        .then((respuesta) => respuesta.json())
+        .then((r) => {
+          if (r.error) throw new Error(r.error);
+          return r.datos;
+        });
     }
 
     // Al volver a la página (por ejemplo, después de clase) se actualiza la racha.
@@ -342,6 +373,7 @@
         celdas.push(`<span class="${clases.join(' ').trim()}" title="${fecha}">${Number(fecha.slice(8))}</span>`);
       }
       $('calendario').innerHTML = celdas.join('');
+      pintarMusica(v);
       $('proximo-pago').textContent = v.proximoPago ? `Tu próximo pago de la mensualidad es el ${fechaLarga(v.proximoPago)}.` : '';
       $('contenido').hidden = false;
     }
@@ -399,6 +431,30 @@
         mostrarImc(false);
       }
     } catch {}
+
+    // Música para el WOD.
+    function pintarMusica(v) {
+      if (document.activeElement !== $('musica-texto')) $('musica-texto').value = v.musica || '';
+      $('musica-estado').textContent = v.musica ? `Tu canción para el WOD: ${v.musica} 🎶` : '';
+      $('musica-top').hidden = !v.musicaMasPedida.length;
+      $('musica-lista').innerHTML = v.musicaMasPedida
+        .map((m) => `<li>${escapar(m.texto)}${m.veces > 1 ? ` <small style="display:inline">· ${m.veces} votos</small>` : ''}</li>`).join('');
+    }
+
+    $('form-musica').addEventListener('submit', (evento) => {
+      evento.preventDefault();
+      if (typeof enviarMusica !== 'function') return;
+      const boton = $('musica-enviar');
+      boton.disabled = true;
+      $('musica-estado').textContent = 'Enviando…';
+      enviarMusica($('musica-texto').value)
+        .then((r) => {
+          pintarMusica(r);
+          $('musica-estado').textContent = r.musica ? `¡Listo! Pediste: ${r.musica} 🎶` : 'Quitaste tu canción.';
+        })
+        .catch((error) => { $('musica-estado').textContent = error.message || 'No se pudo enviar. Intenta de nuevo.'; })
+        .finally(() => { boton.disabled = false; });
+    });
 
     function cargar() {
       $('error').hidden = true;

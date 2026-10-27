@@ -433,11 +433,13 @@
     } catch {}
 
     // Música para el WOD.
+    // Si el programa de Google todavía es la versión anterior (sin música), la página igual abre.
     function pintarMusica(v) {
+      const masPedida = v.musicaMasPedida || [];
       if (document.activeElement !== $('musica-texto')) $('musica-texto').value = v.musica || '';
       $('musica-estado').textContent = v.musica ? `Tu canción para el WOD: ${v.musica} 🎶` : '';
-      $('musica-top').hidden = !v.musicaMasPedida.length;
-      $('musica-lista').innerHTML = v.musicaMasPedida
+      $('musica-top').hidden = !masPedida.length;
+      $('musica-lista').innerHTML = masPedida
         .map((m) => `<li>${escapar(m.texto)}${m.veces > 1 ? ` <small style="display:inline">· ${m.veces} votos</small>` : ''}</li>`).join('');
     }
 

@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#000000">
+  <title>Ranking del mes · CrossFit Bros Team</title>
+  <link rel="preconnect" href="https://script.google.com">
+  <link rel="preconnect" href="https://script.googleusercontent.com">
+  <link rel="dns-prefetch" href="https://script.googleusercontent.com">
+  <link rel="icon" href="logo.jpg">
+  <style>
+    /* Pantalla para el monitor del box: se ve de lejos y se ajusta a cualquier tamaño (vw/vh). */
+    :root {
+      --fondo: #000000;
+      --superficie: #101010;
+      --borde: #262626;
+      --texto: #ffffff;
+      --tenue: #9a9a9a;
+      --verde: #00ff00;
+      --verde-oscuro: #0b3d0b;
+      --oro: #ffd34d;
+      --plata: #d9d9d9;
+      --bronce: #e0915a;
+      color-scheme: dark;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body { background: var(--fondo); color: var(--texto); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; overflow: hidden; cursor: none; }
+    .pantalla { height: 100vh; display: grid; grid-template-rows: auto 1fr auto; gap: 2vh; padding: 3vh 3vw; }
+    [hidden] { display: none !important; }
+
+    header { display: flex; align-items: center; gap: 2vw; border-bottom: .4vh solid var(--verde); padding-bottom: 2vh; }
+    header img { height: 11vh; width: auto; }
+    header h1 { margin: 0; font-family: Impact, "Arial Black", sans-serif; font-weight: 400; font-size: 6.2vh; letter-spacing: .05em; text-transform: uppercase; line-height: 1; }
+    header h1 span { color: var(--verde); }
+    header .sub { color: var(--tenue); font-size: 2.6vh; margin-top: .8vh; }
+    header .derecha { margin-left: auto; text-align: right; }
+    .reloj { font-family: Impact, "Arial Black", sans-serif; font-size: 6vh; line-height: 1; }
+    .cierre { font-size: 2.4vh; color: var(--tenue); margin-top: .6vh; }
+    .cierre b { color: var(--verde); }
+
+    main { display: grid; grid-template-columns: 1.15fr 1fr; gap: 3vw; min-height: 0; overflow: hidden; }
+
+    /* Podio */
+    .podio { display: grid; grid-template-columns: 1fr 1.15fr 1fr; align-items: end; gap: 1.5vw; min-height: 0; height: 100%; }
+    .escalon { background: var(--superficie); border: .3vh solid var(--borde); border-radius: 2vh 2vh 0 0; display: grid; justify-items: center; align-content: start; text-align: center; padding: 3vh 1vw 2vh; gap: 1vh; }
+    .escalon.l1 { height: 100%; border-color: var(--oro); box-shadow: 0 0 4vh rgb(255 211 77 / .25); }
+    .escalon.l2 { height: 86%; border-color: var(--plata); }
+    .escalon.l3 { height: 74%; border-color: var(--bronce); }
+    .medalla { font-size: 10vh; line-height: 1; }
+    .escalon .nombre { font-size: 4.2vh; font-weight: 800; line-height: 1.1; word-break: break-word; }
+    .escalon .puntos { font-family: Impact, "Arial Black", sans-serif; font-size: 7vh; color: var(--verde); line-height: 1; }
+    .escalon .puntos small { font-family: system-ui, sans-serif; font-size: 2.2vh; color: var(--tenue); display: block; margin-top: .6vh; }
+    .escalon .nivel { font-size: 2.2vh; color: var(--tenue); text-transform: uppercase; letter-spacing: .08em; }
+    .escalon.vacio { opacity: .35; }
+
+    /* Del 4º en adelante */
+    .tabla { display: grid; grid-template-rows: auto 1fr; gap: 1vh; min-height: 0; overflow: hidden; }
+    #tabla { display: grid; align-content: start; gap: 1vh; min-height: 0; overflow: hidden; }
+    .tabla h2, .abajo h2 { margin: 0 0 .5vh; font-size: 2.6vh; color: var(--tenue); text-transform: uppercase; letter-spacing: .08em; }
+    .fila { display: grid; grid-template-columns: 6vh 1fr auto auto; align-items: center; gap: 1vw; background: var(--superficie); border: .2vh solid var(--borde); border-radius: 1.4vh; padding: .9vh 1.4vw; font-size: 3.1vh; }
+    .fila .pos { font-weight: 800; color: var(--tenue); }
+    .fila .niv { font-size: 1.9vh; color: var(--tenue); text-transform: uppercase; letter-spacing: .06em; }
+    .fila .pts { font-family: Impact, "Arial Black", sans-serif; color: var(--verde); font-size: 3.6vh; }
+    .vacio-mes { display: grid; place-items: center; text-align: center; font-size: 4vh; color: var(--tenue); grid-column: 1 / -1; }
+
+    /* Abajo: rachas y podio de hoy */
+    .abajo { display: grid; grid-template-columns: 1.4fr 1fr; gap: 3vw; }
+    .caja { background: var(--superficie); border: .2vh solid var(--borde); border-radius: 1.6vh; padding: 1.6vh 1.4vw; }
+    .chips { display: flex; flex-wrap: wrap; gap: 1vh 1.2vw; font-size: 3vh; }
+    .chips span b { color: var(--verde); }
+    .error { position: fixed; right: 2vw; bottom: 1.5vh; font-size: 1.8vh; color: var(--tenue); }
+    .cargando { display: grid; place-items: center; height: 100vh; font-size: 5vh; color: var(--tenue); }
+    @media (prefers-reduced-motion: no-preference) {
+      .escalon.l1 .medalla { animation: brillo 2.4s ease-in-out infinite; }
+      @keyframes brillo { 50% { transform: scale(1.08); } }
+    }
+  </style>
+</head>
+<body>
+  <div class="cargando" id="cargando">🔥 Cargando ranking…</div>
+  <div class="pantalla" id="pantalla" hidden>
+    <header>
+      <img src="logo.jpg" alt="CrossFit Bros Team">
+      <div>
+        <h1>Ranking de <span id="mes"></span></h1>
+        <div class="sub" id="participantes"></div>
+      </div>
+      <div class="derecha">
+        <div class="reloj" id="reloj"></div>
+        <div class="cierre" id="cierre"></div>
+      </div>
+    </header>
+    <main>
+      <section class="podio" id="podio" aria-label="Podio del mes"></section>
+      <section class="tabla">
+        <h2>Tabla general</h2>
+        <div id="tabla"></div>
+      </section>
+    </main>
+    <section class="abajo">
+      <div class="caja">
+        <h2>🔥 Rachas más largas</h2>
+        <div class="chips" id="rachas"></div>
+      </div>
+      <div class="caja">
+        <h2 id="titulo-hoy">🏋️ Podio de hoy</h2>
+        <div class="chips" id="hoy"></div>
+      </div>
+    </section>
+  </div>
+  <div class="error" id="error" hidden></div>
+
+  <script src="config.js"></script>
+  <script>
+    function pedirPantalla() {
+      if (new URLSearchParams(location.search).has('demo')) return Promise.resolve({"hoy":"2026-10-28","mes":"octubre","diasParaCierre":3,"premiosDelMes":[300,200,100],"participantes":18,"ranking":[{"posicion":1,"nombre":"Beto R.","puntos":972,"nivel":"Plata"},{"posicion":2,"nombre":"Ana L.","puntos":931,"nivel":"Bronce"},{"posicion":3,"nombre":"Fernanda T.","puntos":755,"nivel":"Bronce"},{"posicion":4,"nombre":"Diego H.","puntos":690,"nivel":"Hierro"},{"posicion":5,"nombre":"Sofía R.","puntos":610,"nivel":"Hierro"},{"posicion":6,"nombre":"Jorge C.","puntos":588,"nivel":"Hierro"},{"posicion":7,"nombre":"Carolina V.","puntos":540,"nivel":"Novato"},{"posicion":8,"nombre":"Luis O.","puntos":512,"nivel":"Hierro"},{"posicion":9,"nombre":"Paola R.","puntos":470,"nivel":"Novato"},{"posicion":10,"nombre":"Memo S.","puntos":455,"nivel":"Novato"},{"posicion":11,"nombre":"Karla M.","puntos":430,"nivel":"Novato"},{"posicion":12,"nombre":"Iván P.","puntos":402,"nivel":"Novato"},{"posicion":13,"nombre":"Dani G.","puntos":388,"nivel":"Novato"},{"posicion":14,"nombre":"Mariana F.","puntos":350,"nivel":"Novato"},{"posicion":15,"nombre":"Toño B.","puntos":322,"nivel":"Novato"}],"rachas":[{"nombre":"Ana L.","racha":50},{"nombre":"Beto R.","racha":42},{"nombre":"Fernanda T.","racha":31},{"nombre":"Diego H.","racha":23},{"nombre":"Sofía R.","racha":18}],"podioDeHoy":[{"lugar":1,"nombre":"Beto R.","puntos":55},{"lugar":2,"nombre":"Ana L.","puntos":48},{"lugar":3,"nombre":"Diego H.","puntos":41}]});
+      return fetch(window.CBT_API, { method: 'POST', body: JSON.stringify({ accion: 'pantalla' }) })
+        .catch(() => { throw new Error('sin internet'); })
+        .then((respuesta) => respuesta.json())
+        .then((r) => (r.error ? Promise.reject(new Error(r.error)) : r.datos));
+    }
+
+    const $ = (id) => document.getElementById(id);
+    const escapar = (texto) => String(texto ?? '').replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+    const MEDALLAS = ['🥇', '🥈', '🥉'];
+    const MINUTOS_PARA_ACTUALIZAR = 5;
+    const LLAVE = 'cbt-pantalla';
+
+    function mostrar(v) {
+      $('cargando').hidden = true;
+      $('pantalla').hidden = false;
+      $('mes').textContent = v.mes;
+      $('participantes').textContent = v.participantes
+        ? `${v.participantes} atletas compitiendo · cada mes todos empiezan en cero`
+        : 'Cada clase suma puntos. ¡El ranking empieza con tu primera clase del mes!';
+      const pm = v.premiosDelMes;
+      $('cierre').innerHTML = v.diasParaCierre > 0
+        ? `Cierra en <b>${v.diasParaCierre} día${v.diasParaCierre === 1 ? '' : 's'}</b> · 🥇 +${pm[0]} 🥈 +${pm[1]} 🥉 +${pm[2]}`
+        : `<b>¡Hoy cierra el mes!</b> · 🥇 +${pm[0]} 🥈 +${pm[1]} 🥉 +${pm[2]}`;
+
+      // Podio: 2º, 1º y 3º (el primero en medio y más alto).
+      const lugar = (n) => v.ranking[n - 1];
+      $('podio').innerHTML = [2, 1, 3].map((n) => {
+        const f = lugar(n);
+        if (!f) return `<div class="escalon l${n} vacio"><div class="medalla">${MEDALLAS[n - 1]}</div><div class="nombre">¿Quién?</div></div>`;
+        return `<div class="escalon l${n}">
+          <div class="medalla">${MEDALLAS[Math.min(f.posicion, 3) - 1] ?? MEDALLAS[n - 1]}</div>
+          <div class="nombre">${escapar(f.nombre)}</div>
+          <div class="nivel">Nivel ${escapar(f.nivel)}</div>
+          <div class="puntos">${f.puntos.toLocaleString('es-MX')}<small>puntos</small></div>
+        </div>`;
+      }).join('');
+
+      const resto = v.ranking.slice(3);
+      $('tabla').innerHTML = v.ranking.length === 0
+        ? '<div class="vacio-mes">Aún no hay puntos este mes.<br>¡El primero en venir arranca arriba! 🔥</div>'
+        : resto.length
+          ? resto.map((f) => `<div class="fila"><span class="pos">${f.posicion}º</span>
+              <span>${escapar(f.nombre)}</span><span class="niv">${escapar(f.nivel)}</span><span class="pts">${f.puntos.toLocaleString('es-MX')}</span></div>`).join('')
+          : '<div class="vacio-mes">¡Todavía hay lugares libres en el ranking!</div>';
+
+      // Solo los lugares que caben completos en el monitor.
+      const caja = $('tabla');
+      while (caja.children.length > 1 && caja.scrollHeight > caja.clientHeight + 1) caja.lastElementChild.remove();
+
+      $('rachas').innerHTML = v.rachas.length
+        ? v.rachas.map((r) => `<span>${escapar(r.nombre)} <b>${r.racha} 🔥</b></span>`).join('')
+        : '<span>Cada clase suma un día de racha.</span>';
+      $('titulo-hoy').textContent = v.podioDeHoy.length ? '🏋️ Podio de hoy' : '🏋️ Podio del WOD';
+      $('hoy').innerHTML = v.podioDeHoy.length
+        ? v.podioDeHoy.map((f) => `<span>${MEDALLAS[f.lugar - 1]} ${escapar(f.nombre)} <b>${f.puntos}</b></span>`).join('')
+        : '<span>Aparece aquí en cuanto se califique el WOD de hoy.</span>';
+    }
+
+    function actualizar() {
+      return pedirPantalla()
+        .then((v) => {
+          mostrar(v);
+          $('error').hidden = true;
+          try { localStorage.setItem(LLAVE, JSON.stringify(v)); } catch {}
+        })
+        .catch((error) => {
+          // Si falla el internet se queda lo último que se mostró y se vuelve a intentar.
+          $('error').hidden = false;
+          $('error').textContent = `Sin conexión: se muestra lo último guardado. (${error.message || 'reintentando'})`;
+        });
+    }
+
+    // Si cambia el tamaño de la ventana (o entra en pantalla completa) se vuelve a acomodar.
+    window.addEventListener('resize', () => {
+      try { const v = JSON.parse(localStorage.getItem(LLAVE) || 'null'); if (v) mostrar(v); } catch {}
+    });
+
+    function reloj() {
+      $('reloj').textContent = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    try {
+      const guardado = JSON.parse(localStorage.getItem(LLAVE) || 'null');
+      if (guardado) mostrar(guardado);
+    } catch {}
+    reloj();
+    setInterval(reloj, 10 * 1000);
+    actualizar();
+    setInterval(actualizar, MINUTOS_PARA_ACTUALIZAR * 60 * 1000);
+    // Un clic (o tecla) pone la pantalla completa en el monitor.
+    const completa = () => document.documentElement.requestFullscreen?.().catch(() => {});
+    document.addEventListener('click', completa);
+    document.addEventListener('keydown', completa);
+  </script>
+</body>
+</html>

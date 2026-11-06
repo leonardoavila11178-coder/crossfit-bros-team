@@ -324,6 +324,26 @@ button.llego[aria-busy="true"] { opacity: .7; }
 .mas-pedida { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
 .mas-pedida span { background: var(--ok-fondo); color: var(--texto); border-radius: 999px; padding: 4px 10px; font-size: .85rem; }
 .musica-panel .historial { max-height: 260px; }
+
+/* Quién me debe (fiado) */
+.deudas { background: var(--superficie); border: 1px solid var(--borde); border-radius: 12px; padding: 12px 14px; margin: 12px 0 16px; }
+.deudas.con-deudas { border-color: var(--aviso); background: var(--aviso-fondo); }
+.deudas-encabezado { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.deudas-encabezado h3 { margin: 0; font-size: 1.15rem; }
+.deudas-total { font-weight: 800; color: var(--aviso); font-size: 1.1rem; }
+.lista-deudas { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 8px; }
+.lista-deudas li { display: flex; gap: 12px; align-items: center; background: var(--fondo); border: 1px solid var(--borde); border-radius: 10px; padding: 10px 12px; }
+.lista-deudas .persona { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.deuda-monto { font-size: 1.2rem; color: var(--aviso); white-space: nowrap; }
+.cuando-paga { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border: 0; padding: 0; margin: 0 0 10px; }
+.cuando-paga legend { font-size: .88rem; color: var(--tenue); margin-bottom: 4px; padding: 0; }
+.cuando-paga label { margin: 0; }
+.cuando-paga input { position: absolute; opacity: 0; }
+.cuando-paga span { display: block; text-align: center; padding: 12px; border: 1px solid var(--borde); border-radius: 10px; color: var(--texto); font-weight: 700; cursor: pointer; }
+.cuando-paga input:checked + span { border-color: var(--marca); background: var(--ok-fondo); color: var(--marca); }
+.cuando-paga input:focus-visible + span { outline: 2px solid var(--marca); outline-offset: 2px; }
+.estado.mov-fiado { background: var(--aviso-fondo); color: var(--aviso); }
+@media (max-width: 520px) { .lista-deudas li { flex-wrap: wrap; } .lista-deudas li button { width: 100%; } }
 </style>
 </head>
 <body>
@@ -469,6 +489,14 @@ button.llego[aria-busy="true"] { opacity: .7; }
         </div>
         <button type="button" id="btn-producto">+ Producto nuevo</button>
       </div>
+      <section class="deudas" id="deudas" aria-labelledby="titulo-deudas">
+        <div class="deudas-encabezado">
+          <h3 id="titulo-deudas">💸 Quién me debe</h3>
+          <span class="deudas-total" id="deudas-total"></span>
+        </div>
+        <ul class="lista-deudas" id="lista-deudas"></ul>
+        <p class="tel" id="sin-deudas">Nadie te debe. 🙌 Cuando alguien se lleve algo y te pague después, al vender elige «Me paga después».</p>
+      </section>
       <div class="tarjetas">
         <div class="tarjeta ok"><span id="venta-hoy">$0</span>Vendido hoy <small class="tel" id="venta-hoy-detalle"></small></div>
         <div class="tarjeta"><span id="venta-mes">$0</span>Vendido este mes</div>
@@ -654,15 +682,37 @@ button.llego[aria-busy="true"] { opacity: .7; }
       <p class="sub" id="info-movimiento"></p>
       <div class="fila">
         <label id="etiqueta-cantidad">Piezas <input name="cantidad" id="mov-cantidad" type="number" min="1" step="1" value="1" required inputmode="numeric"></label>
-        <label class="solo-venta">Pago
+        <label class="solo-venta solo-ahora">Pago
           <select name="metodo" id="mov-metodo"></select>
         </label>
       </div>
+      <fieldset class="cuando-paga solo-venta">
+        <legend>¿Cuándo paga?</legend>
+        <label><input type="radio" name="cuando" value="ahora" checked><span>💵 Pagó ahora</span></label>
+        <label><input type="radio" name="cuando" value="despues"><span>🕒 Me paga después</span></label>
+      </fieldset>
+      <label class="solo-venta solo-despues" hidden>¿Quién te debe?
+        <input id="mov-deudor" list="lista-nombres-socios" maxlength="60" autocomplete="off" placeholder="Nombre de quien se lo lleva">
+      </label>
+      <datalist id="lista-nombres-socios"></datalist>
       <p class="calculo solo-venta" id="mov-total"></p>
       <p class="error" id="error-movimiento"></p>
       <div class="botones">
         <button type="button" class="secundario" data-cerrar>Cancelar</button>
         <button type="submit" id="guardar-movimiento">Vender</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dialogo-cobro">
+    <form id="form-cobro" method="dialog">
+      <h2 id="titulo-cobro">Ya pagó</h2>
+      <p class="sub" id="info-cobro"></p>
+      <label>¿Cómo pagó? <select id="cobro-metodo"></select></label>
+      <p class="error" id="error-cobro"></p>
+      <div class="botones">
+        <button type="button" class="secundario" data-cerrar>Cancelar</button>
+        <button type="submit" id="guardar-cobro">Ya pagó</button>
       </div>
     </form>
   </dialog>
@@ -1069,7 +1119,7 @@ function pintarSocios() {
       <td><button class="enlace-socio" data-accion="expediente" data-id="${s.id}">${escapar(s.nombre)}</button>${s.racha?.racha ? ` <span class="fuego">🔥 ${s.racha.racha}</span>` : ''}${s.cumpleHoy ? ' <span class="estado cumple">🎂 Hoy cumple años</span>' : ''}
         <br><span class="tel">${escapar(contacto(s))}${s.fechaNacimiento ? ` · 🎂 ${cumple(s.fechaNacimiento)}` : ''}</span></td>
       <td>${esConvenio(s) ? '—' : `Día ${s.diaPago}`}</td>
-      <td>${esConvenio(s) ? `<span class="tel">Entra con ${escapar(nombreTipo(s))}</span>` : `${fecha(s.proximoPago)}<br><span class="tel">${textoDias(s)}</span>`}</td>
+      <td>${esConvenio(s) ? `<span class="tel">Entra con ${escapar(nombreTipo(s))}${s.ultimaVisita ? `<br>Última vez: ${fecha(s.ultimaVisita)} · baja el ${fecha(s.fechaBaja)} si no viene` : ''}</span>` : `${fecha(s.proximoPago)}<br><span class="tel">${textoDias(s)}</span>`}</td>
       <td><span class="estado ${estadoVisible(s)}">${escapar(etiquetaEstado(s))}</span></td>
       <td><div class="acciones-fila">
         ${esConvenio(s) ? '' : `<button class="mini" data-accion="pagar" data-id="${s.id}">Registrar pago</button>`}
@@ -1318,6 +1368,8 @@ let tienda = { productos: [], movimientos: [], hoy: { total: 0, porMetodo: {} },
 let productoAbierto = null;
 let modoMovimiento = 'venta';
 const TIPOS_MOVIMIENTO = { venta: 'Venta', entrada: 'Llegó', premio: 'Premio', conteo: 'Conteo' };
+const FIADO = 'fiado';
+let deudaAbierta = null;
 
 // Piezas con signo: las ventas y premios restan, las entradas suman, el conteo según la diferencia.
 function piezasMovimiento(m) {
@@ -1330,7 +1382,25 @@ async function cargarTienda() {
   pintarTienda();
 }
 
+// Quién me debe: lo primero que se ve en la Tienda.
+function pintarDeudas() {
+  const lista = tienda.deudas ?? [];
+  $('#deudas').classList.toggle('con-deudas', lista.length > 0);
+  $('#deudas-total').textContent = lista.length ? `${dinero(tienda.porCobrar)} por cobrar` : '';
+  $('#sin-deudas').hidden = lista.length > 0;
+  $('#lista-deudas').innerHTML = lista.map((d, i) => `
+    <li>
+      <div class="persona">
+        <strong>${escapar(d.deudor)}</strong>
+        <span class="tel">${d.cosas.map((c) => `${c.cantidad} ${escapar(c.producto)}`).join(', ')} · desde el ${fecha(d.desde)}</span>
+      </div>
+      <b class="deuda-monto">${dinero(d.total)}</b>
+      <button type="button" data-cobrar="${i}">Ya pagó</button>
+    </li>`).join('');
+}
+
 function pintarTienda() {
+  pintarDeudas();
   const porSurtir = tienda.productos.filter((p) => p.porSurtir);
   $('#venta-hoy').textContent = dinero(tienda.hoy.total);
   $('#venta-hoy-detalle').textContent = Object.entries(tienda.hoy.porMetodo)
@@ -1356,10 +1426,10 @@ function pintarTienda() {
   $('#lista-movimientos').innerHTML = tienda.movimientos.map((m) => `
     <tr>
       <td>${fecha(m.fecha)}</td>
-      <td><span class="estado mov-${m.tipo}">${TIPOS_MOVIMIENTO[m.tipo]}</span>${m.cliente ? `<br><span class="tel">${escapar(m.cliente)}</span>` : ''}</td>
+      <td><span class="estado mov-${m.metodo === FIADO ? 'fiado' : m.tipo}">${m.metodo === FIADO ? 'Me debe' : m.fiadoEl ? 'Pagó lo fiado' : TIPOS_MOVIMIENTO[m.tipo]}</span>${m.cliente ? `<br><span class="tel">${escapar(m.cliente)}</span>` : ''}</td>
       <td>${escapar(m.producto)}</td>
       <td>${piezasMovimiento(m)}</td>
-      <td>${m.tipo === 'venta' ? `${dinero(m.total)}<br><span class="tel">${escapar(config.metodosDePago[m.metodo] ?? '')}</span>` : ''}</td>
+      <td>${m.tipo === 'venta' ? `${dinero(m.total)}<br><span class="tel">${m.metodo === FIADO ? 'pendiente' : escapar(config.metodosDePago[m.metodo] ?? '')}${m.cobradoEn ? ` · el ${fecha(m.cobradoEn)}` : ''}</span>` : ''}</td>
       <td>${m.existencias}</td>
       <td><button class="mini secundario" data-deshacer="${m.id}">Deshacer</button></td>
     </tr>`).join('');
@@ -1379,15 +1449,28 @@ function abrirMovimiento(producto, modo) {
     ? `${dinero(producto.precio)} cada uno · quedan ${producto.existencias}.`
     : `Escribe cuántas piezas llegaron. Ahora hay ${producto.existencias}.`;
   $('#etiqueta-cantidad').firstChild.textContent = esVenta ? 'Piezas ' : 'Piezas que llegaron ';
-  $('#guardar-movimiento').textContent = esVenta ? 'Vender' : 'Sumar al inventario';
+  $('#lista-nombres-socios').innerHTML = socios.filter((s) => s.activo).map((s) => `<option value="${escapar(s.nombre)}">`).join('');
+  aplicarCuandoPaga();
   actualizarTotalVenta();
   $('#dialogo-movimiento').showModal();
 }
 
+// «Pagó ahora» pide la forma de pago; «Me paga después» pide el nombre de quien debe.
+const pagaDespues = () => modoMovimiento === 'venta' && document.querySelector('#form-movimiento input[name=cuando]:checked')?.value === 'despues';
+function aplicarCuandoPaga() {
+  const despues = pagaDespues();
+  document.querySelectorAll('#form-movimiento .solo-ahora').forEach((el) => { el.hidden = modoMovimiento !== 'venta' || despues; });
+  document.querySelectorAll('#form-movimiento .solo-despues').forEach((el) => { el.hidden = !despues; });
+  $('#guardar-movimiento').textContent = modoMovimiento !== 'venta' ? 'Sumar al inventario' : despues ? 'Anotar que me debe' : 'Vender';
+  actualizarTotalVenta();
+  if (despues) $('#mov-deudor').focus();
+}
+document.querySelectorAll('#form-movimiento input[name=cuando]').forEach((opcion) => opcion.addEventListener('change', aplicarCuandoPaga));
+
 function actualizarTotalVenta() {
   if (modoMovimiento !== 'venta' || !productoAbierto) return;
   const piezas = Number($('#mov-cantidad').value) || 0;
-  $('#mov-total').textContent = `Total a cobrar: ${dinero(piezas * productoAbierto.precio)}`;
+  $('#mov-total').textContent = `${pagaDespues() ? 'Te va a deber' : 'Total a cobrar'}: ${dinero(piezas * productoAbierto.precio)}`;
 }
 
 function abrirProducto(producto) {
@@ -1419,12 +1502,15 @@ $('#form-movimiento').addEventListener('submit', (evento) => {
   evento.preventDefault();
   conEspera($('#guardar-movimiento'), async () => {
     try {
-      const datos = { cantidad: Number($('#mov-cantidad').value), metodo: $('#mov-metodo').value };
+      const despues = pagaDespues();
+      const datos = { cantidad: Number($('#mov-cantidad').value), metodo: despues ? FIADO : $('#mov-metodo').value, deudor: despues ? $('#mov-deudor').value : '' };
       const { producto, movimiento } = await api(`/productos/${productoAbierto.id}/${modoMovimiento}`, { method: 'POST', body: datos });
       $('#dialogo-movimiento').close();
-      avisar(modoMovimiento === 'venta'
-        ? `Vendido: ${movimiento.cantidad} ${producto.nombre} por ${dinero(movimiento.total)}. Quedan ${producto.existencias}.`
-        : `Se sumaron ${movimiento.cantidad} ${producto.nombre}. Ahora hay ${producto.existencias}.`);
+      avisar(modoMovimiento !== 'venta'
+        ? `Se sumaron ${movimiento.cantidad} ${producto.nombre}. Ahora hay ${producto.existencias}.`
+        : despues
+          ? `Anotado: ${movimiento.cliente} te debe ${dinero(movimiento.total)} (${movimiento.cantidad} ${producto.nombre}).`
+          : `Vendido: ${movimiento.cantidad} ${producto.nombre} por ${dinero(movimiento.total)}. Quedan ${producto.existencias}.`);
       await cargarTienda();
     } catch (error) {
       $('#error-movimiento').textContent = error.message;
@@ -1483,6 +1569,32 @@ $('#lista-movimientos').addEventListener('click', (evento) => {
 
 $('#btn-producto').addEventListener('click', () => abrirProducto(null));
 
+$('#lista-deudas').addEventListener('click', (evento) => {
+  const boton = evento.target.closest('button[data-cobrar]');
+  if (!boton) return;
+  deudaAbierta = tienda.deudas[Number(boton.dataset.cobrar)];
+  $('#form-cobro').reset();
+  $('#error-cobro').textContent = '';
+  $('#titulo-cobro').textContent = `${deudaAbierta.deudor} ya pagó`;
+  $('#info-cobro').textContent = `${dinero(deudaAbierta.total)} por ${deudaAbierta.cosas.map((c) => `${c.cantidad} ${c.producto}`).join(', ')}.`;
+  $('#guardar-cobro').textContent = `Ya pagó ${dinero(deudaAbierta.total)}`;
+  $('#dialogo-cobro').showModal();
+});
+
+$('#form-cobro').addEventListener('submit', (evento) => {
+  evento.preventDefault();
+  conEspera($('#guardar-cobro'), async () => {
+    try {
+      const cobro = await api('/deudas/cobrar', { method: 'POST', body: { deudor: deudaAbierta.deudor, metodo: $('#cobro-metodo').value } });
+      $('#dialogo-cobro').close();
+      avisar(`✅ ${cobro.deudor} pagó ${dinero(cobro.total)}. Ya no debe nada.`);
+      await cargarTienda();
+    } catch (error) {
+      $('#error-cobro').textContent = error.message;
+    }
+  });
+});
+
 // ---- Contraseña para entrar desde el celular (solo en la versión de Google) ----
 
 function pintarContrasena() {
@@ -1527,7 +1639,7 @@ async function cargarEliminados() {
   $('#lista-eliminados').innerHTML = lista.map((s) => `
     <tr>
       <td><strong>${escapar(s.nombre)}</strong><br><span class="tel">${escapar(s.telefono)}</span></td>
-      <td>${fecha(s.proximoPago)}</td>
+      <td>${s.proximoPago ? fecha(s.proximoPago) : `<span class="tel">${escapar(nombreTipo(s))}</span>`}</td>
       <td>${fecha(s.eliminadoEn)}<br><span class="tel">${escapar(s.motivo)}</span></td>
       <td><div class="acciones-fila">
         <button class="mini" data-restaurar="${s.id}">Recuperar</button>
@@ -1838,6 +1950,7 @@ $('#wod-fecha').max = config.hoy;
 pintarReglas();
 pintarContrasena();
 $('#mov-metodo').innerHTML = Object.entries(config.metodosDePago).map(([clave, nombre]) => `<option value="${clave}">${escapar(nombre)}</option>`).join('');
+$('#cobro-metodo').innerHTML = $('#mov-metodo').innerHTML;
 $('#prod-premio').innerHTML = '<option value="">No</option>' + config.reglas.premios.map((p) => `<option value="${p.racha}">${p.emoji} Premio de ${p.racha} días (${escapar(p.nombre)})</option>`).join('');
 $('#tipo-monto').textContent = `${dinero(config.montoMensual)} al mes`;
 $('#info-premios').textContent = `Premios GRATIS por racha: ${config.reglas.premios.map((p) => `${p.racha} días = ${p.nombre} ${p.emoji}`).join(', ')}. Cuando se lo des, toca «Entregado».`;
@@ -1845,7 +1958,7 @@ if (config.urlRespaldo) $('.pie a').href = config.urlRespaldo;
 $('#info-hoy').textContent = `Hoy: ${fecha(config.hoy)}`;
 $('#info-plan-encabezado').textContent = `Plan mensual ${dinero(config.montoMensual)}`;
 $('#info-plan').textContent = `Plan mensual de ${dinero(config.montoMensual)}. Solo pon la fecha en que paga: el sistema calcula su día de pago y su próximo pago.`;
-$('#info-eliminados').textContent = `Quien lleva ${config.mesesParaBaja} meses sin pagar desde su fecha de pago se da de baja solo y aparece aquí. `
+$('#info-eliminados').textContent = `Quien lleva ${config.mesesParaBaja} meses sin pagar desde su fecha de pago, o los de TotalPass y Wellhub que llevan ${config.mesesParaBaja} meses sin venir (sin asistencia en el pase de lista), se dan de baja solos y aparecen aquí. `
   + 'Si fue un error (por ejemplo, se te olvidó registrar su pago), dale «Recuperar».';
 $('#info-recordatorios').textContent = config.automaticos
   ? `Cada socio recibe solo sus mensajes: la bienvenida o la confirmación de pago cuando tú lo eliges, un aviso ${config.diasAntes} días antes de su pago, un recordatorio el día de su pago y una felicitación el día de su cumpleaños. El programa revisa las fechas cada mañana a las ${config.horaRecordatorios}:00 (canal: ${config.proveedor}).`

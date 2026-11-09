@@ -491,11 +491,11 @@ button.llego[aria-busy="true"] { opacity: .7; }
       </div>
       <section class="deudas" id="deudas" aria-labelledby="titulo-deudas">
         <div class="deudas-encabezado">
-          <h3 id="titulo-deudas">💸 Quién me debe</h3>
+          <h3 id="titulo-deudas">🏴‍☠️ Lista negra</h3>
           <span class="deudas-total" id="deudas-total"></span>
         </div>
         <ul class="lista-deudas" id="lista-deudas"></ul>
-        <p class="tel" id="sin-deudas">Nadie te debe. 🙌 Cuando alguien se lleve algo y te pague después, al vender elige «Me paga después».</p>
+        <p class="tel" id="sin-deudas">La lista negra está vacía: nadie te debe. 😇 Cuando alguien se lleve algo y te pague después, al vender elige «Me paga después».</p>
       </section>
       <div class="tarjetas">
         <div class="tarjeta ok"><span id="venta-hoy">$0</span>Vendido hoy <small class="tel" id="venta-hoy-detalle"></small></div>
@@ -691,7 +691,7 @@ button.llego[aria-busy="true"] { opacity: .7; }
         <label><input type="radio" name="cuando" value="ahora" checked><span>💵 Pagó ahora</span></label>
         <label><input type="radio" name="cuando" value="despues"><span>🕒 Me paga después</span></label>
       </fieldset>
-      <label class="solo-venta solo-despues" hidden>¿Quién te debe?
+      <label class="solo-venta solo-despues" hidden>¿Quién entra a la lista negra?
         <input id="mov-deudor" list="lista-nombres-socios" maxlength="60" autocomplete="off" placeholder="Nombre de quien se lo lleva">
       </label>
       <datalist id="lista-nombres-socios"></datalist>
@@ -1382,11 +1382,11 @@ async function cargarTienda() {
   pintarTienda();
 }
 
-// Quién me debe: lo primero que se ve en la Tienda.
+// Lista negra (quién me debe): lo primero que se ve en la Tienda.
 function pintarDeudas() {
   const lista = tienda.deudas ?? [];
   $('#deudas').classList.toggle('con-deudas', lista.length > 0);
-  $('#deudas-total').textContent = lista.length ? `${dinero(tienda.porCobrar)} por cobrar` : '';
+  $('#deudas-total').textContent = lista.length ? `${dinero(tienda.porCobrar)} por cobrar 👀` : '';
   $('#sin-deudas').hidden = lista.length > 0;
   $('#lista-deudas').innerHTML = lista.map((d, i) => `
     <li>
@@ -1426,7 +1426,7 @@ function pintarTienda() {
   $('#lista-movimientos').innerHTML = tienda.movimientos.map((m) => `
     <tr>
       <td>${fecha(m.fecha)}</td>
-      <td><span class="estado mov-${m.metodo === FIADO ? 'fiado' : m.tipo}">${m.metodo === FIADO ? 'Me debe' : m.fiadoEl ? 'Pagó lo fiado' : TIPOS_MOVIMIENTO[m.tipo]}</span>${m.cliente ? `<br><span class="tel">${escapar(m.cliente)}</span>` : ''}</td>
+      <td><span class="estado mov-${m.metodo === FIADO ? 'fiado' : m.tipo}">${m.metodo === FIADO ? 'Lista negra' : m.fiadoEl ? 'Salió de la lista' : TIPOS_MOVIMIENTO[m.tipo]}</span>${m.cliente ? `<br><span class="tel">${escapar(m.cliente)}</span>` : ''}</td>
       <td>${escapar(m.producto)}</td>
       <td>${piezasMovimiento(m)}</td>
       <td>${m.tipo === 'venta' ? `${dinero(m.total)}<br><span class="tel">${m.metodo === FIADO ? 'pendiente' : escapar(config.metodosDePago[m.metodo] ?? '')}${m.cobradoEn ? ` · el ${fecha(m.cobradoEn)}` : ''}</span>` : ''}</td>
@@ -1461,7 +1461,7 @@ function aplicarCuandoPaga() {
   const despues = pagaDespues();
   document.querySelectorAll('#form-movimiento .solo-ahora').forEach((el) => { el.hidden = modoMovimiento !== 'venta' || despues; });
   document.querySelectorAll('#form-movimiento .solo-despues').forEach((el) => { el.hidden = !despues; });
-  $('#guardar-movimiento').textContent = modoMovimiento !== 'venta' ? 'Sumar al inventario' : despues ? 'Anotar que me debe' : 'Vender';
+  $('#guardar-movimiento').textContent = modoMovimiento !== 'venta' ? 'Sumar al inventario' : despues ? '🏴‍☠️ Mandar a la lista negra' : 'Vender';
   actualizarTotalVenta();
   if (despues) $('#mov-deudor').focus();
 }
@@ -1470,7 +1470,7 @@ document.querySelectorAll('#form-movimiento input[name=cuando]').forEach((opcion
 function actualizarTotalVenta() {
   if (modoMovimiento !== 'venta' || !productoAbierto) return;
   const piezas = Number($('#mov-cantidad').value) || 0;
-  $('#mov-total').textContent = `${pagaDespues() ? 'Te va a deber' : 'Total a cobrar'}: ${dinero(piezas * productoAbierto.precio)}`;
+  $('#mov-total').textContent = `${pagaDespues() ? 'Queda debiendo' : 'Total a cobrar'}: ${dinero(piezas * productoAbierto.precio)}`;
 }
 
 function abrirProducto(producto) {
@@ -1509,7 +1509,7 @@ $('#form-movimiento').addEventListener('submit', (evento) => {
       avisar(modoMovimiento !== 'venta'
         ? `Se sumaron ${movimiento.cantidad} ${producto.nombre}. Ahora hay ${producto.existencias}.`
         : despues
-          ? `Anotado: ${movimiento.cliente} te debe ${dinero(movimiento.total)} (${movimiento.cantidad} ${producto.nombre}).`
+          ? `🏴‍☠️ ${movimiento.cliente} entró a la lista negra: debe ${dinero(movimiento.total)} (${movimiento.cantidad} ${producto.nombre}).`
           : `Vendido: ${movimiento.cantidad} ${producto.nombre} por ${dinero(movimiento.total)}. Quedan ${producto.existencias}.`);
       await cargarTienda();
     } catch (error) {
@@ -1587,7 +1587,7 @@ $('#form-cobro').addEventListener('submit', (evento) => {
     try {
       const cobro = await api('/deudas/cobrar', { method: 'POST', body: { deudor: deudaAbierta.deudor, metodo: $('#cobro-metodo').value } });
       $('#dialogo-cobro').close();
-      avisar(`✅ ${cobro.deudor} pagó ${dinero(cobro.total)}. Ya no debe nada.`);
+      avisar(`✅ ${cobro.deudor} pagó ${dinero(cobro.total)} y salió de la lista negra. 😇`);
       await cargarTienda();
     } catch (error) {
       $('#error-cobro').textContent = error.message;

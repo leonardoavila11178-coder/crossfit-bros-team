@@ -224,6 +224,8 @@
       $('error-entrada').textContent = '';
       try {
         const r = await llamar({ accion: 'ganancias', clave: $('clave').value });
+        // Un programa de Google sin el corte de caja contesta como si fuera el panel.
+        if (r.sinSesion) throw new Error('Tu programa de Google todavía no tiene el corte de caja: actualízalo y haz «Nueva versión» en la implementación «Cualquier persona».');
         if (r.error) throw new Error(r.error);
         const datos = r.datos ?? r;
         guardarPermiso(datos.permiso, datos.horas);

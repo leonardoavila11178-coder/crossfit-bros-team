@@ -862,6 +862,7 @@ async function abrirGanancias(clave) {
   let r;
   if (PANEL.modo === 'clave' || PANEL.modo === 'coach') {
     const respuesta = await llamarConClave({ accion: 'ganancias', clave });
+    if (respuesta.sinSesion) throw new Error('Tu programa de Google todavía no tiene el candado de ganancias: actualízalo y haz «Nueva versión» en la implementación «Cualquier persona».');
     if (respuesta.error) throw new Error(respuesta.error);
     r = respuesta.datos;
   } else {

@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#000000">
+  <meta name="robots" content="noindex">
+  <title>Corte de caja · CrossFit Bros Team</title>
+  <link rel="preconnect" href="https://script.google.com">
+  <link rel="preconnect" href="https://script.googleusercontent.com">
+  <link rel="dns-prefetch" href="https://script.googleusercontent.com">
+  <link rel="icon" href="logo.jpg">
+  <style>
+    :root {
+      --fondo: #000000; --superficie: #111111; --borde: #2b2b2b; --texto: #ffffff; --tenue: #a3a3a3;
+      --verde: #00ff00; --verde-oscuro: #0b3d0b; --aviso: #ffc233; --aviso-fondo: #3d2e05; --peligro: #ff5c5c; --peligro-fondo: #4a0d0d;
+      color-scheme: dark;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--fondo); color: var(--texto); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    [hidden] { display: none !important; }
+    main { max-width: 560px; margin: 0 auto; padding: 20px 16px 48px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+    header { display: flex; gap: 12px; align-items: center; }
+    header img { width: 52px; height: auto; border-radius: 6px; }
+    h1 { margin: 0; font-family: Impact, "Arial Black", sans-serif; font-weight: 400; color: var(--verde); font-size: 1.4rem; letter-spacing: .03em; text-transform: uppercase; }
+    header p { margin: 2px 0 0; color: var(--tenue); font-size: .9rem; }
+    .tarjeta { background: var(--superficie); border: 1px solid var(--borde); border-radius: 14px; padding: 14px 16px; }
+    h2 { margin: 0 0 10px; font-size: .95rem; text-transform: uppercase; letter-spacing: .06em; color: var(--tenue); }
+    label { display: grid; gap: 4px; font-size: .88rem; color: var(--tenue); }
+    input, textarea { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--borde); background: var(--fondo); color: var(--texto); font: inherit; font-size: 1.05rem; }
+    input:focus, textarea:focus { outline: 2px solid var(--verde); outline-offset: 1px; }
+    button { padding: 12px 16px; border: 0; border-radius: 10px; background: var(--verde); color: #000; font: inherit; font-weight: 800; cursor: pointer; touch-action: manipulation; }
+    button.secundario { background: transparent; color: var(--texto); border: 1px solid var(--borde); }
+    button:disabled { opacity: .6; }
+    .error { color: var(--peligro); min-height: 1em; margin: 6px 0 0; font-size: .9rem; }
+    .filas { display: grid; gap: 6px; }
+    .fila { display: flex; justify-content: space-between; gap: 10px; font-size: .98rem; }
+    .fila b { font-variant-numeric: tabular-nums; }
+    .fila.total { border-top: 1px solid var(--borde); padding-top: 8px; margin-top: 4px; font-size: 1.05rem; }
+    .tenue { color: var(--tenue); font-size: .85rem; }
+    .grande { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+    .grande b { font-family: Impact, "Arial Black", sans-serif; font-weight: 400; font-size: 2.2rem; color: var(--verde); }
+    .dos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .resultado { border-radius: 14px; padding: 16px; text-align: center; font-weight: 800; font-size: 1.25rem; }
+    .resultado.cuadra { background: var(--verde-oscuro); color: var(--verde); border: 1px solid var(--verde); }
+    .resultado.falta { background: var(--peligro-fondo); color: var(--peligro); border: 1px solid var(--peligro); }
+    .resultado.sobra { background: var(--aviso-fondo); color: var(--aviso); border: 1px solid var(--aviso); }
+    .resultado small { display: block; font-weight: 400; font-size: .85rem; margin-top: 4px; color: var(--texto); }
+    .historial { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+    .historial li { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--borde); font-size: .92rem; }
+    .historial li:last-child { border-bottom: 0; }
+    .ok { color: var(--verde); } .mal { color: var(--peligro); } .medio { color: var(--aviso); }
+    .barra-fecha { display: flex; gap: 8px; align-items: end; }
+    .barra-fecha label { flex: 1; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <img src="logo.jpg" alt="CrossFit Bros Team">
+      <div>
+        <h1>Corte de caja</h1>
+        <p>Lo que entró en el día contra lo que hay en la caja.</p>
+      </div>
+    </header>
+
+    <section class="tarjeta" id="entrada">
+      <h2>🔒 Contraseña de ganancias</h2>
+      <form id="form-entrada">
+        <label>Contraseña <input type="password" id="clave" autocomplete="off" required></label>
+        <p class="error" id="error-entrada"></p>
+        <button type="submit" id="entrar" style="width:100%">Entrar</button>
+      </form>
+    </section>
+
+    <div id="contenido" hidden>
+      <section class="tarjeta barra-fecha">
+        <label>Día del corte <input type="date" id="fecha"></label>
+        <button type="button" class="secundario" id="salir">🔒 Salir</button>
+      </section>
+
+      <section class="tarjeta" style="margin-top:14px">
+        <h2>💳 Mensualidades</h2>
+        <div class="filas" id="mensualidades"></div>
+      </section>
+
+      <section class="tarjeta" style="margin-top:14px">
+        <h2>🛒 Tienda</h2>
+        <div class="filas" id="tienda"></div>
+      </section>
+
+      <section class="tarjeta" style="margin-top:14px">
+        <h2>📊 Total del día</h2>
+        <div class="filas" id="totales"></div>
+      </section>
+
+      <section class="tarjeta" style="margin-top:14px">
+        <h2>💵 Cuenta la caja</h2>
+        <form id="form-corte" class="filas" style="gap:10px">
+          <div class="dos">
+            <label>Fondo con el que abrió <input type="number" id="fondo" min="0" step="0.5" inputmode="decimal" value="0"></label>
+            <label>Efectivo contado ahora <input type="number" id="contado" min="0" step="0.5" inputmode="decimal" placeholder="0" required></label>
+          </div>
+          <div class="grande"><span class="tenue">Debe haber en efectivo</span><b id="debe-haber">$0</b></div>
+          <div class="resultado" id="resultado" hidden></div>
+          <label>Fondo que se queda para mañana <input type="number" id="fondo-siguiente" min="0" step="0.5" inputmode="decimal" value="0"></label>
+          <label>Nota (opcional) <textarea id="nota" rows="2" maxlength="300" placeholder="Ej. se pagó el garrafón con $40 de la caja"></textarea></label>
+          <p class="error" id="error-corte"></p>
+          <button type="submit" id="guardar">Guardar corte</button>
+          <p class="tenue" id="corte-guardado"></p>
+        </form>
+      </section>
+
+      <section class="tarjeta" style="margin-top:14px">
+        <h2>🗓️ Cortes anteriores</h2>
+        <ul class="historial" id="historial"></ul>
+      </section>
+    </div>
+  </main>
+
+  <script src="config.js"></script>
+  <script>
+    function llamar(cuerpo) {
+      return fetch(window.CBT_API, { method: 'POST', body: JSON.stringify(cuerpo) })
+        .catch(() => { throw new Error('Sin conexión. Revisa tu internet e inténtalo de nuevo.'); })
+        .then((respuesta) => respuesta.json());
+    }
+
+    const $ = (id) => document.getElementById(id);
+    const escapar = (texto) => String(texto ?? '').replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+    const dinero = (n) => Number(n || 0).toLocaleString('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 2 });
+    const fechaCorta = (f) => new Date(`${f}T12:00:00`).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' });
+    const METODOS = { efectivo: '💵 Efectivo', transferencia: '🏦 Transferencia', tarjeta: '💳 Tarjeta' };
+    const LLAVE = 'cbt-ganancias-corte';
+    let permiso = '';
+    let resumen = null;
+
+    const hoy = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
+    const filas = (pares) => pares.map(([texto, valor, clase = '']) => `<div class="fila ${clase}"><span>${texto}</span><b>${valor}</b></div>`).join('');
+
+    async function pedir(cuerpo) {
+      const r = await llamar({ ...cuerpo, ganancias: permiso });
+      return r;
+    }
+
+    function guardarPermiso(p, horas) {
+      permiso = p;
+      try { sessionStorage.setItem(LLAVE, JSON.stringify({ permiso: p, vence: Date.now() + horas * 3600 * 1000 - 60000 })); } catch {}
+    }
+
+    function salir(mensaje = '') {
+      permiso = '';
+      try { sessionStorage.removeItem(LLAVE); } catch {}
+      $('contenido').hidden = true;
+      $('entrada').hidden = false;
+      $('error-entrada').textContent = mensaje;
+      $('clave').value = '';
+    }
+
+    function pintarResumen() {
+      const r = resumen;
+      const m = r.mensualidades;
+      $('mensualidades').innerHTML = (m.pagos.length
+        ? m.pagos.map((p) => `<div class="fila"><span>${escapar(p.nombre)} <span class="tenue">· ${METODOS[p.metodo]}</span></span><b>${dinero(p.monto)}</b></div>`).join('')
+        : '<p class="tenue" style="margin:0">No se registraron mensualidades este día.</p>')
+        + filas([['Total mensualidades', dinero(m.total), 'total']]);
+      const t = r.tienda;
+      $('tienda').innerHTML = (t.productos.length
+        ? t.productos.map((p) => `<div class="fila"><span>${p.piezas} × ${escapar(p.producto)}</span><b>${dinero(p.total)}</b></div>`).join('')
+        : '<p class="tenue" style="margin:0">No hubo ventas cobradas este día.</p>')
+        + filas([['Total tienda', dinero(t.total), 'total']])
+        + (r.fiadoDelDia ? `<p class="tenue" style="margin:6px 0 0">🏴‍☠️ Se fiaron ${dinero(r.fiadoDelDia)} (no está en la caja hasta que paguen).</p>` : '');
+      $('totales').innerHTML = filas([
+        ...Object.entries(METODOS).map(([clave, nombre]) => [nombre, dinero(r.porMetodo[clave])]),
+        ['Total del día', dinero(r.total), 'total'],
+      ]) + '<p class="tenue" style="margin:6px 0 0">Las transferencias y tarjetas no están en la caja: revísalas en tu banco o terminal.</p>';
+      const c = r.corte;
+      $('fondo').value = c ? c.fondo : r.fondoSugerido;
+      $('contado').value = c ? c.contado : '';
+      $('fondo-siguiente').value = c ? c.fondoSiguiente : r.fondoSugerido;
+      delete $('fondo-siguiente').dataset.tocado;
+      $('nota').value = c ? c.nota : '';
+      $('corte-guardado').textContent = c ? `Corte guardado${c.quien ? ` por ${c.quien}` : ''}. Si lo vuelves a guardar se reemplaza.` : '';
+      calcular();
+    }
+
+    function calcular() {
+      if (!resumen) return;
+      const fondo = Number($('fondo').value || 0);
+      const debeHaber = fondo + resumen.efectivoEsperado;
+      $('debe-haber').textContent = dinero(debeHaber);
+      const contado = $('contado').value;
+      const caja = $('resultado');
+      if (contado === '') { caja.hidden = true; return; }
+      const diferencia = Math.round((Number(contado) - debeHaber) * 100) / 100;
+      caja.hidden = false;
+      caja.className = `resultado ${diferencia === 0 ? 'cuadra' : diferencia < 0 ? 'falta' : 'sobra'}`;
+      caja.innerHTML = diferencia === 0
+        ? '✅ ¡La caja cuadra!<small>El efectivo contado es igual a lo registrado.</small>'
+        : diferencia < 0
+          ? `⚠️ Faltan ${dinero(-diferencia)}<small>Revisa si falta registrar un pago o si salió dinero de la caja.</small>`
+          : `⚠️ Sobran ${dinero(diferencia)}<small>Revisa si algún pago o venta no se registró en el panel.</small>`;
+    }
+
+    async function cargar() {
+      const r = await pedir({ accion: 'caja', op: 'resumen', fecha: $('fecha').value });
+      if (r.sinGanancias) return salir(r.error);
+      if (r.error) throw new Error(r.error);
+      resumen = r.datos;
+      pintarResumen();
+      const h = await pedir({ accion: 'caja', op: 'cortes' });
+      if (!h.error) {
+        $('historial').innerHTML = h.datos.length
+          ? h.datos.map((c) => `<li><span>${fechaCorta(c.fecha)} <span class="tenue">· total ${dinero(c.total)}</span></span>
+              <b class="${c.diferencia === 0 ? 'ok' : c.diferencia < 0 ? 'mal' : 'medio'}">${c.diferencia === 0 ? '✅ Cuadró' : c.diferencia < 0 ? `Faltaron ${dinero(-c.diferencia)}` : `Sobraron ${dinero(c.diferencia)}`}</b></li>`).join('')
+          : '<li class="tenue">Todavía no hay cortes guardados.</li>';
+      }
+    }
+
+    $('form-entrada').addEventListener('submit', async (evento) => {
+      evento.preventDefault();
+      $('entrar').disabled = true;
+      $('error-entrada').textContent = '';
+      try {
+        const r = await llamar({ accion: 'ganancias', clave: $('clave').value });
+        if (r.error) throw new Error(r.error);
+        const datos = r.datos ?? r;
+        guardarPermiso(datos.permiso, datos.horas);
+        $('entrada').hidden = true;
+        $('contenido').hidden = false;
+        await cargar();
+      } catch (error) {
+        $('error-entrada').textContent = /fetch|Load failed/i.test(error.message) ? 'Sin conexión. Revisa tu internet.' : error.message;
+      } finally {
+        $('entrar').disabled = false;
+      }
+    });
+
+    $('form-corte').addEventListener('submit', async (evento) => {
+      evento.preventDefault();
+      $('guardar').disabled = true;
+      $('error-corte').textContent = '';
+      try {
+        const r = await pedir({ accion: 'caja', op: 'guardar', corte: {
+          fecha: $('fecha').value, fondo: $('fondo').value, contado: $('contado').value,
+          fondoSiguiente: $('fondo-siguiente').value, nota: $('nota').value,
+        } });
+        if (r.sinGanancias) return salir(r.error);
+        if (r.error) throw new Error(r.error);
+        await cargar();
+        $('corte-guardado').textContent = '✅ Corte guardado.';
+      } catch (error) {
+        $('error-corte').textContent = error.message;
+      } finally {
+        $('guardar').disabled = false;
+      }
+    });
+
+    for (const id of ['fondo', 'contado']) $(id).addEventListener('input', calcular);
+    // El fondo para mañana copia el fondo de hoy hasta que lo cambies a mano.
+    $('fondo-siguiente').addEventListener('input', () => { $('fondo-siguiente').dataset.tocado = '1'; });
+    $('fondo').addEventListener('input', () => { if (!$('fondo-siguiente').dataset.tocado) $('fondo-siguiente').value = $('fondo').value; });
+    $('fecha').addEventListener('change', () => cargar().catch((e) => { $('error-corte').textContent = e.message; }));
+    $('salir').addEventListener('click', () => salir());
+    $('fecha').value = hoy();
+    $('fecha').max = hoy();
+
+    try {
+      const guardado = JSON.parse(sessionStorage.getItem(LLAVE) || 'null');
+      if (guardado && guardado.vence > Date.now()) {
+        permiso = guardado.permiso;
+        $('entrada').hidden = true;
+        $('contenido').hidden = false;
+        cargar().catch(() => salir());
+      }
+    } catch {}
+  </script>
+</body>
+</html>
